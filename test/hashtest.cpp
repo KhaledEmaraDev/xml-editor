@@ -11,11 +11,16 @@ void test_hash_codes() {
 
 void test_hash_map() {
     HashMap<int, QString> mp;
-    mp.insert(4, "Test4");
-    mp.insert(4, "Test4");
-    mp.insert(8, "Test8");
+    for(int i = 0; i < 16; i++)
+    {
+        mp.insert(i, "Test4");
+        qDebug() << mp;
+    }
 
-    qDebug() << mp;
+    for(auto it = mp.find(1); it != mp.end(); ++it) {
+        qDebug() << *it << " " << mp.get(*it);
+    }
+
 
     int i = 0;
     for(auto item : mp) {

@@ -8,8 +8,8 @@
 
 static const size_t multiplier = 263;
 static const size_t prime = 1000000007;
-static const size_t a = 34;
-static const size_t b = 2;
+static const size_t a = 17;
+static const size_t b = 7;
 
 template <class key_t,
           std::enable_if_t<std::is_integral<key_t>::value, int> = 0>

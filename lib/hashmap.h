@@ -11,84 +11,43 @@
 //                                          std::is_same<key_t, QString>::value ||
 //                                          std::is_same<key_t, std::string>::value ||
 //                                          std::is_same<key_t, const char *>::value, int> = 0;
-template <typename key_t, typename value_t>
-struct Cell {
-    key_t key;
-    value_t value;
-    Cell* next;
-    Cell* previous;
+//template <typename key_t, typename value_t>
 
-    Cell() = default;
-
-    Cell(key_t key, value_t value)
-        : key(key), value(value), next(nullptr), previous(nullptr)
-    {
-        // do nothing
-    }
-};
 
 template <typename key_t, typename value_t>
 class HashMap {
-public:
-    HashMap()
-        : buckets(16), num_cells(0)
-    {
-        // do nothing
-    }
 
-    HashMap& insert(const key_t& key, const value_t& vaule) {
-        int index = hash_code(key) % buckets.size();
-        Cell<key_t, value_t>* new_cell =
-                new Cell<key_t, value_t>(key, vaule);
+private:
+    struct Cell {
+        key_t key;
+        value_t value;
+        Cell* next;
+        Cell* previous;
 
-        if(buckets[index]) {
-            Cell<key_t, value_t>* cp = buckets[index];
-            while(cp) {
-                if(cp->key == key) {
-                    delete new_cell;
-                    return *this;
-                }
-                cp = cp->next;
-            }
-            new_cell->next = buckets[index];
-            buckets[index]->previous = new_cell;
-            buckets[index] = new_cell;
+        Cell() = default;
+
+        Cell(key_t key, value_t value)
+            : key(key), value(value), next(nullptr), previous(nullptr)
+        {
+            // do nothing
         }
-        else {
-            buckets[index] = new_cell;
-        }
+    };
 
-        num_cells++;
-        return *this;
-    }
-
-    value_t get(const key_t& key) {
-        int index = hash_code(key) % buckets.size();
-        Cell<key_t, value_t>* cp = buckets[index];
-        while (cp) {
-            if(cp->key == key) {
-                return cp->value;
-            }
-            cp = cp->next;
-        }
-        return NULL;
-    }
-
-    HashMap& insert(const std::pair<key_t, value_t>& item) {
-        return insert(item.first, item.second);
-    }
-
-    template <typename T, typename U>
-    friend QDebug operator<<(QDebug dbg, const HashMap<T, U> &seg);
 public:
     class iterator:
             public std::iterator<std::input_iterator_tag, key_t> {
     private:
         const HashMap* mp;
         int bucket;
-        Cell<key_t, value_t>* cp;
+        Cell* cp;
+
     public:
         iterator() = default;
+        iterator(const HashMap* mp, int bucket,Cell* cp)
+            : mp(mp), bucket(bucket), cp(cp)
+        {
+            // do nothing
+        }
         iterator(const HashMap* mp, bool end)
         {
             this->mp = mp;
@@ -141,14 +100,160 @@ public:
         return iterator(this, true);
     }
 
-private:
+public:
+    HashMap();
+    ~HashMap();
 
-    QVector<Cell<key_t, value_t> *> buckets;
+    HashMap& insert(const std::pair<key_t, value_t>& item);
+    HashMap& insert(const key_t& key, const value_t& vaule);
+
+    value_t get(const key_t& key);
+    value_t operator[](const key_t& key);
+    iterator find(const key_t& key);
+
+
+    template <typename T, typename U>
+    friend QDebug operator<<(QDebug dbg, const HashMap<T, U> &seg);
+
+private:
+    Cell* find_cell(const key_t& key, int index) {
+        for (Cell* cp = buckets[index]; cp; cp = cp->next) {
+            if(cp->key == key) {
+                return cp;
+            }
+        }
+        return NULL;
+    }
+
+    void delete_buckets(QVector<Cell*>& buckets);
+    void deep_copy(HashMap<key_t, value_t>& src);
+    void rehash();
+
+private:
+    QVector<Cell*> buckets;
     int num_cells;
+
+    static constexpr float MAX_LOAD_FACTOR = 0.75;
 };
 
+
+//#include "lib/hashmap_impl.h"
+
 template <typename key_t, typename value_t>
-QDebug operator<<(QDebug dbg, const HashMap<key_t, value_t> &mp) {
+HashMap<key_t, value_t>::HashMap()
+    : buckets(16), num_cells(0)
+{
+    // do nothing
+}
+template <typename key_t, typename value_t>
+HashMap<key_t, value_t>&
+HashMap<key_t, value_t>::insert(const key_t& key, const value_t& vaule) {
+    rehash();
+
+    int index = hash_code(key) % buckets.size();
+    Cell* new_cell =new Cell(key, vaule);
+
+    if(buckets[index]) {
+        Cell* cp = buckets[index];
+        while(cp) {
+            if(cp->key == key) {
+                delete new_cell;
+                return *this;
+            }
+            cp = cp->next;
+        }
+        new_cell->next = buckets[index];
+        buckets[index]->previous = new_cell;
+        buckets[index] = new_cell;
+    }
+    else {
+        buckets[index] = new_cell;
+    }
+
+    num_cells++;
+    return *this;
+}
+
+
+template <typename key_t, typename value_t>
+value_t
+HashMap<key_t, value_t>::get(const key_t& key) {
+    int index = hash_code(key) % buckets.size();
+    Cell * cell = find_cell(key, index);
+    if(cell)
+        return cell->value;
+    return value_t();
+}
+
+template<typename key_t, typename value_t>
+typename HashMap<key_t, value_t>::iterator
+HashMap<key_t, value_t>::find(const key_t &key)
+{
+    int index = hash_code(key) % buckets.size();
+    Cell * cell = find_cell(key, index);
+    if(cell)
+        return HashMap<key_t, value_t>::iterator(this, index, cell);
+    return end();
+}
+
+
+template <typename key_t, typename value_t>
+HashMap<key_t, value_t>&
+HashMap<key_t, value_t>::insert(const std::pair<key_t, value_t>& item) {
+    return insert(item.first, item.second);
+}
+
+
+template<typename key_t, typename value_t>
+HashMap<key_t, value_t>::~HashMap()
+{
+    delete_buckets(buckets);
+    num_cells = 0;
+}
+
+
+template<typename key_t, typename value_t>
+void
+HashMap<key_t, value_t>::delete_buckets(QVector<Cell*>& buckets)
+{
+    for (int i = 0; i < buckets.size(); i++) {
+        Cell* cp = buckets[i];
+        while (cp) {
+            Cell* temp = cp->next;
+            delete cp;
+            cp = temp;
+        }
+        buckets[i] = nullptr;
+    }
+}
+
+template<typename key_t, typename value_t>
+void
+HashMap<key_t, value_t>::deep_copy(HashMap<key_t, value_t>& src)
+{
+
+}
+
+template<typename key_t, typename value_t>
+void
+HashMap<key_t, value_t>::rehash()
+{
+    if(num_cells <= MAX_LOAD_FACTOR * buckets.size())
+        return;
+
+    QVector<Cell*> old_buckets = buckets;
+    buckets = QVector<Cell *>(buckets.size() * 2);
+    num_cells = 0;
+    for(int i = 0; i < old_buckets.size(); i++) {
+        for (Cell* cp = old_buckets[i]; cp; cp = cp->next) {
+            insert(cp->key, cp->value);
+        }
+    }
+}
+
+template <typename key_t, typename value_t>
+QDebug
+operator<<(QDebug dbg, const HashMap<key_t, value_t> &mp) {
     for(int i = 0; i < mp.buckets.size(); i++) {
         dbg.nospace() << i << ":";
         auto cp = mp.buckets[i];

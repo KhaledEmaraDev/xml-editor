@@ -11,7 +11,6 @@ CONFIG += c++17
 SOURCES += \
     codeeditor.cpp \
     highlighter.cpp \
-    lib/hashmap.cpp \
     lib/xmlnode.cpp \
     main.cpp \
     mainwidnow.cpp \
@@ -22,6 +21,7 @@ HEADERS += \
     highlighter.h \
     lib/hashcode.h \
     lib/hashmap.h \
+    lib/hashmap_impl.h \
     lib/xmlnode.h \
     mainwindow.h
 
