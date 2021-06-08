@@ -2,7 +2,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++17
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -11,12 +11,18 @@ CONFIG += c++11
 SOURCES += \
     codeeditor.cpp \
     highlighter.cpp \
+    lib/hashmap.cpp \
+    lib/xmlnode.cpp \
     main.cpp \
-    mainwidnow.cpp
+    mainwidnow.cpp \
+    test/hashtest.cpp
 
 HEADERS += \
     codeeditor.h \
     highlighter.h \
+    lib/hashcode.h \
+    lib/hashmap.h \
+    lib/xmlnode.h \
     mainwindow.h
 
 # Default rules for deployment.
