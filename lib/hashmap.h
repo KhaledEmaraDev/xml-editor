@@ -106,17 +106,18 @@ public:
     ~HashMap();
 
     int size() { return num_cells; }
-    HashMap& operator =(const HashMap& src);
-    HashMap& operator =(HashMap&& src);
+    HashMap& operator=(const HashMap& src);
+    HashMap& operator=(HashMap&& src);
 
 
     HashMap& insert(const std::pair<key_t, value_t>& item);
     HashMap& insert(const key_t& key, const value_t& vaule);
 
     value_t get(const key_t& key) const;
-    value_t operator[](const key_t& key) const;
+    bool contains(const key_t& key) const;
     iterator find(const key_t& key) const;
 
+    value_t operator[](const key_t& key) const;
     value_t& operator[](const key_t& key);
 
     void clear();
@@ -212,6 +213,14 @@ HashMap<key_t, value_t>::get(const key_t& key) const
     if(cell)
         return cell->value;
     return value_t();
+}
+
+
+template<typename key_t, typename value_t>
+bool HashMap<key_t, value_t>::contains(const key_t &key) const
+{
+    int index = hash_code(key) % buckets.size();
+    return find_cell(key, index);
 }
 
 template<typename key_t, typename value_t>
