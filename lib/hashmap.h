@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QVector>
 
+#include "lib/mpair.h"
 #include "lib/hashcode.h"
 
 //template <typename key_t, typename value_t>
@@ -74,12 +75,12 @@ public:
             return copy;
         }
 
-        key_t& operator*() {
-            return cp->key;
+        MPair<key_t, value_t> operator*() {
+            return make_mpair(cp->key, cp->value);
         }
 
-        key_t* operator->() {
-            return &(cp->key);
+        MPair<key_t, value_t> operator->() {
+            return make_mpair(cp->key, cp->value);
         }
         bool operator ==(const iterator& it) {
             return mp == it.mp && bucket == it.bucket && cp == it.cp;
@@ -104,6 +105,7 @@ public:
     HashMap(HashMap&& src);
     ~HashMap();
 
+    int size() { return num_cells; }
     HashMap& operator =(const HashMap& src);
     HashMap& operator =(HashMap&& src);
 
@@ -297,7 +299,7 @@ HashMap<key_t, value_t>::~HashMap()
 }
 
 template<typename key_t, typename value_t>
-HashMap<key_t, value_t> &
+HashMap<key_t, value_t>&
 HashMap<key_t, value_t>::operator=(const HashMap &src)
 {
     if (this != &src) {
@@ -308,7 +310,7 @@ HashMap<key_t, value_t>::operator=(const HashMap &src)
 }
 
 template<typename key_t, typename value_t>
-HashMap<key_t, value_t> &
+HashMap<key_t, value_t>&
 HashMap<key_t, value_t>::operator=(HashMap &&src)
 {
     num_cells = src.num_cells;

@@ -18,13 +18,13 @@ void test_hash_map() {
 
     mp.insert({40, QString("Yup")});
 
-    qDebug() << mp;
+//    qDebug() << mp;
 
     for(int i = 8; i < 16; i++)
     {
         mp.remove(i);
     }
-    qDebug() << mp;
+//    qDebug() << mp;
     mp[0] = "Test10";
     mp[9] = "Test9";
 
@@ -35,25 +35,30 @@ void test_hash_map() {
     assert(mp.find(20) == mp.end());
     assert(mp.find(2) != mp.end());
 
-    qDebug() << mp;
+//    qDebug() << mp;
 
     HashMap<int, QString> copy(mp);
-    qDebug() << mp;
-    qDebug() << copy;
+//    qDebug() << mp;
+//    qDebug() << copy;
 
     copy = mp;
     copy = std::move(mp);
-    qDebug() << mp;
-    qDebug() << copy;
+//    qDebug() << mp;
+//    qDebug() << copy;
 //    assert(mp == copy);
 
-    copy.clear();
+//    copy.clear();
 
-    qDebug() << copy;
+//    qDebug() << copy;
 
     int i = 0;
-    for(auto item : mp) {
-         qDebug() << i++ << item;
+    for(auto&& item : copy) {
+         qDebug() << i++ << item.key << "/" << item.value;
+    }
+
+    i = 0;
+    for(auto it = copy.begin(); it != copy.end(); ++it) {
+         qDebug() << i++ << it->key << "/" << it->value;
     }
 }
 
