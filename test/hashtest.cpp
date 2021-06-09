@@ -16,6 +16,8 @@ void test_hash_map() {
         mp.insert(i, QString("Test") + QString(i + '0'));
     }
 
+    mp.insert({40, QString("Yup")});
+
     qDebug() << mp;
 
     for(int i = 8; i < 16; i++)
@@ -39,9 +41,10 @@ void test_hash_map() {
     qDebug() << mp;
     qDebug() << copy;
 
+    copy = mp;
     copy = std::move(mp);
     qDebug() << mp;
-     qDebug() << copy;
+    qDebug() << copy;
 //    assert(mp == copy);
 
     copy.clear();

@@ -302,7 +302,7 @@ HashMap<key_t, value_t>::operator=(const HashMap &src)
 {
     if (this != &src) {
         clear();
-        deepCopy(src);
+        deep_copy(src);
     }
     return *this;
 }
