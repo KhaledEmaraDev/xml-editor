@@ -21,6 +21,7 @@ HEADERS += \
     highlighter.h \
     lib/hashcode.h \
     lib/hashmap.h \
+    lib/mpair.h \
     lib/xmlnode.h \
     mainwindow.h
 
