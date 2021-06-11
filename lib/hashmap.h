@@ -111,14 +111,14 @@ public:
     HashMap& operator=(HashMap&& src);
 
 
-    HashMap& insert(const MPair<key_t, value_t>& item);
-    HashMap& insert(const key_t& key, const value_t& vaule);
+    void insert(const MPair<key_t, value_t>& item);
+    void insert(const key_t& key, const value_t& vaule);
 
-    value_t get(const key_t& key) const;
+    const value_t& get(const key_t& key) const;
     bool contains(const key_t& key) const;
     iterator find(const key_t& key) const;
 
-    value_t operator[](const key_t& key) const;
+    const value_t& operator[](const key_t& key) const;
     value_t& operator[](const key_t& key);
 
     void clear();
@@ -168,45 +168,44 @@ HashMap<key_t, value_t>::HashMap(HashMap &&src)
 
 
 template <typename key_t, typename value_t>
-HashMap<key_t, value_t>&
+void
 HashMap<key_t, value_t>::insert(const key_t& key, const value_t& vaule)
 {
     rehash();
 
     int index = hash_code(key) % buckets.size();
-    Cell* new_cell =new Cell(key, vaule);
 
     if(buckets[index]) {
         Cell* cp = buckets[index];
         while(cp) {
             if(cp->data.key == key) {
-                delete new_cell;
-                return *this;
+                return;
             }
             cp = cp->next;
         }
+        Cell* new_cell = new Cell(key, vaule);
         new_cell->next = buckets[index];
         buckets[index]->previous = new_cell;
         buckets[index] = new_cell;
     }
     else {
+        Cell* new_cell = new Cell(key, vaule);
         buckets[index] = new_cell;
     }
 
     num_cells++;
-    return *this;
 }
 
 
 template <typename key_t, typename value_t>
-value_t
+const value_t&
 HashMap<key_t, value_t>::get(const key_t& key) const
 {
     int index = hash_code(key) % buckets.size();
     Cell * cell = find_cell(key, index);
     if(cell)
         return cell->data.value;
-    return value_t();
+    return std::move(value_t());
 }
 
 
@@ -229,7 +228,7 @@ HashMap<key_t, value_t>::find(const key_t &key) const
 }
 
 template<typename key_t, typename value_t>
-value_t
+const value_t&
 HashMap<key_t, value_t>::operator[](const key_t &key) const
 {
     return get(key);
@@ -317,10 +316,10 @@ HashMap<key_t, value_t>::operator=(const HashMap &src)
 }
 
 template<typename key_t, typename value_t>
-HashMap<key_t, value_t>&
+void
 HashMap<key_t, value_t>::insert(const MPair<key_t, value_t> &item)
 {
-     return insert(item.key, item.value);
+    insert(item.key, item.value);
 }
 
 template<typename key_t, typename value_t>
@@ -379,8 +378,9 @@ HashMap<key_t, value_t>::rehash()
 
     Cell *cp, *temp;
 
-    QVector<Cell*> old_buckets = buckets;
-    buckets = QVector<Cell *>(buckets.size() * 2);
+    int new_size = buckets.size() * 2;
+    QVector<Cell*> old_buckets = std::move(buckets);
+    buckets = QVector<Cell *>(new_size);
 
     for(int i = 0; i < old_buckets.size(); i++) {
         cp = old_buckets[i];
@@ -393,7 +393,8 @@ HashMap<key_t, value_t>::rehash()
 }
 
 template<typename key_t, typename value_t>
-void HashMap<key_t, value_t>::insert_cell(HashMap::Cell *cell)
+void
+HashMap<key_t, value_t>::insert_cell(HashMap::Cell *cell)
 {
     int index = hash_code(cell->data.key) % buckets.size();
     if(buckets[index]) {

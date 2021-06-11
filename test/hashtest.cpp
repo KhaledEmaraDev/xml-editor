@@ -28,6 +28,7 @@ void test_hash_map() {
     mp[0] = "Test10";
     mp[9] = "Test9";
 
+
     assert(mp[1] == "Test1");
     assert(mp[0] == "Test10");
     assert(mp[12] == "");
@@ -62,9 +63,13 @@ void test_hash_map() {
     for(auto it = copy.begin(); it != copy.end(); ++it) {
          qDebug() << i++ << it->key << "/" << it->value;
 //         it->key = 9;
-         it->value = "NWay";
+//         it->value = "NWay";
     }
+
+
+    qDebug() << "Ya" << copy.get(19);
     qDebug() << copy;
+
 }
 
 void testAll() {
