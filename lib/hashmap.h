@@ -112,7 +112,6 @@ public:
 
 
     HashMap& insert(const MPair<key_t, value_t>& item);
-    HashMap& insert(const std::pair<key_t, value_t>& item);
     HashMap& insert(const key_t& key, const value_t& vaule);
 
     value_t get(const key_t& key) const;
@@ -299,14 +298,6 @@ HashMap<key_t, value_t>::operator[](const key_t &key)
 }
 
 
-template <typename key_t, typename value_t>
-HashMap<key_t, value_t>&
-HashMap<key_t, value_t>::insert(const std::pair<key_t, value_t>& item)
-{
-    return insert(item.first, item.second);
-}
-
-
 template<typename key_t, typename value_t>
 HashMap<key_t, value_t>::~HashMap()
 {
@@ -378,7 +369,7 @@ HashMap<key_t, value_t>::deep_copy(const HashMap<key_t, value_t>& src)
     }
 }
 
-// TODO: performe shallow copy instead
+
 template<typename key_t, typename value_t>
 void
 HashMap<key_t, value_t>::rehash()
@@ -386,16 +377,37 @@ HashMap<key_t, value_t>::rehash()
     if(num_cells <= MAX_LOAD_FACTOR * buckets.size())
         return;
 
+    Cell *cp, *temp;
+
     QVector<Cell*> old_buckets = buckets;
     buckets = QVector<Cell *>(buckets.size() * 2);
-    num_cells = 0;
+
     for(int i = 0; i < old_buckets.size(); i++) {
-        for (Cell* cp = old_buckets[i]; cp; cp = cp->next) {
-            insert(cp->data.key, cp->data.value);
+        cp = old_buckets[i];
+        while(cp) {
+            temp = cp->next;
+            insert_cell(cp);
+            cp = temp;
         }
     }
-    delete_buckets(old_buckets);
 }
+
+template<typename key_t, typename value_t>
+void HashMap<key_t, value_t>::insert_cell(HashMap::Cell *cell)
+{
+    int index = hash_code(cell->data.key) % buckets.size();
+    if(buckets[index]) {
+        cell->next = buckets[index];
+        buckets[index]->previous = cell;
+        buckets[index] = cell;
+    }
+    else {
+        cell->next = nullptr;
+        buckets[index] = cell;
+    }
+    cell->previous = nullptr;
+}
+
 
 template <typename key_t, typename value_t>
 QDebug
