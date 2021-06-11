@@ -7,7 +7,7 @@
 
 template <typename key_t, typename value_t>
 struct MPair {
-    key_t key;
+    const key_t key;
     value_t value;
 
     MPair() = default;
@@ -91,11 +91,6 @@ struct MPair {
     {
         std::swap(key, mp.key);
         std::swap(value, mp.value);
-    }
-
-    MPair* operator->()
-    {
-        return this;
     }
 };
 

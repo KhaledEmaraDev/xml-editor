@@ -52,14 +52,19 @@ void test_hash_map() {
 //    qDebug() << copy;
 
     int i = 0;
-    for(auto&& item : copy) {
+    for(auto& item : copy) {
          qDebug() << i++ << item.key << "/" << item.value;
+//         item.key = 9;
+//         item.value = "NWay";
     }
 
     i = 0;
     for(auto it = copy.begin(); it != copy.end(); ++it) {
          qDebug() << i++ << it->key << "/" << it->value;
+//         it->key = 9;
+         it->value = "NWay";
     }
+    qDebug() << copy;
 }
 
 void testAll() {

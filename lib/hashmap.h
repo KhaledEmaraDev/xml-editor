@@ -7,34 +7,35 @@
 #include "lib/mpair.h"
 #include "lib/hashcode.h"
 
-//template <typename key_t, typename value_t>
-//using enable_condition = std::enable_if_t<std::is_integral<key_t>::value ||
-//                                          std::is_same<key_t, QString>::value ||
-//                                          std::is_same<key_t, std::string>::value ||
-//                                          std::is_same<key_t, const char *>::value, int> = 0;
-
 template <typename key_t, typename value_t>
 class HashMap {
 
-private:
+public:
     struct Cell {
-        key_t key;
-        value_t value;
+        MPair<key_t, value_t> data;
         Cell* next;
         Cell* previous;
 
         Cell() = default;
 
-        Cell(key_t key, value_t value)
-            : key(key), value(value), next(nullptr), previous(nullptr)
-        {
-            // do nothing
-        }
+        Cell(const MPair<key_t, value_t>& data)
+            : data(data),
+              next(nullptr),
+              previous(nullptr)
+        { /* do nothing */ }
+
+        Cell(const key_t& key, const value_t& value)
+            : data(key, value),
+              next(nullptr),
+              previous(nullptr)
+        { /* do nothing */ }
     };
 
 public:
     class iterator:
-            public std::iterator<std::input_iterator_tag, key_t> {
+            public std::iterator<std::input_iterator_tag,
+            MPair<key_t, value_t>>
+    {
     private:
         const HashMap* mp;
         int bucket;
@@ -42,11 +43,11 @@ public:
 
     public:
         iterator() = default;
+
         iterator(const HashMap* mp, int bucket,Cell* cp)
             : mp(mp), bucket(bucket), cp(cp)
-        {
-            // do nothing
-        }
+        { /* do nothing */ }
+
         iterator(const HashMap* mp, bool end)
         {
             this->mp = mp;
@@ -75,12 +76,12 @@ public:
             return copy;
         }
 
-        MPair<key_t, value_t> operator*() {
-            return make_mpair(cp->key, cp->value);
+        MPair<key_t, value_t>& operator*() {
+            return cp->data;
         }
 
-        MPair<key_t, value_t> operator->() {
-            return make_mpair(cp->key, cp->value);
+        MPair<key_t, value_t>* operator->() {
+            return &(cp->data);
         }
         bool operator ==(const iterator& it) {
             return mp == it.mp && bucket == it.bucket && cp == it.cp;
@@ -110,6 +111,7 @@ public:
     HashMap& operator=(HashMap&& src);
 
 
+    HashMap& insert(const MPair<key_t, value_t>& item);
     HashMap& insert(const std::pair<key_t, value_t>& item);
     HashMap& insert(const key_t& key, const value_t& vaule);
 
@@ -127,16 +129,9 @@ public:
     friend QDebug operator<<(QDebug dbg, const HashMap<T, U> &mp);
 
 private:
-    Cell* find_cell(const key_t& key, int index) const
-    {
-        for (Cell* cp = buckets[index]; cp; cp = cp->next) {
-            if(cp->key == key) {
-                return cp;
-            }
-        }
-        return NULL;
-    }
+    void insert_cell(Cell* cell);
 
+    Cell* find_cell(const key_t& key, int index) const;
     void delete_buckets(QVector<Cell*>& buckets) const;
     void deep_copy(const HashMap<key_t, value_t>& src);
     void rehash();
@@ -185,7 +180,7 @@ HashMap<key_t, value_t>::insert(const key_t& key, const value_t& vaule)
     if(buckets[index]) {
         Cell* cp = buckets[index];
         while(cp) {
-            if(cp->key == key) {
+            if(cp->data.key == key) {
                 delete new_cell;
                 return *this;
             }
@@ -211,7 +206,7 @@ HashMap<key_t, value_t>::get(const key_t& key) const
     int index = hash_code(key) % buckets.size();
     Cell * cell = find_cell(key, index);
     if(cell)
-        return cell->value;
+        return cell->data.value;
     return value_t();
 }
 
@@ -271,6 +266,18 @@ HashMap<key_t, value_t>::remove(const key_t &key)
 }
 
 template<typename key_t, typename value_t>
+typename HashMap<key_t, value_t>::Cell *
+HashMap<key_t, value_t>::find_cell(const key_t &key, int index) const
+{
+    for (Cell* cp = buckets[index]; cp; cp = cp->next) {
+        if(cp->data.key == key) {
+            return cp;
+        }
+    }
+    return NULL;
+}
+
+template<typename key_t, typename value_t>
 value_t &
 HashMap<key_t, value_t>::operator[](const key_t &key)
 {
@@ -288,7 +295,7 @@ HashMap<key_t, value_t>::operator[](const key_t &key)
         num_cells++;
     }
 
-    return cp->value;
+    return cp->data.value;
 }
 
 
@@ -316,6 +323,13 @@ HashMap<key_t, value_t>::operator=(const HashMap &src)
         deep_copy(src);
     }
     return *this;
+}
+
+template<typename key_t, typename value_t>
+HashMap<key_t, value_t>&
+HashMap<key_t, value_t>::insert(const MPair<key_t, value_t> &item)
+{
+     return insert(item.key, item.value);
 }
 
 template<typename key_t, typename value_t>
@@ -352,7 +366,7 @@ HashMap<key_t, value_t>::deep_copy(const HashMap<key_t, value_t>& src)
     for (int i = 0; i < src.buckets.size(); i++) {
         Cell* last_item = nullptr;
         for (Cell* cp = src.buckets[i]; cp ; cp = cp->next) {
-            Cell* new_cell = new Cell(cp->key, cp->value);
+            Cell* new_cell = new Cell(cp->data.key, cp->data.value);
 
             if (last_item) {
                 last_item->next = new_cell;
@@ -364,6 +378,7 @@ HashMap<key_t, value_t>::deep_copy(const HashMap<key_t, value_t>& src)
     }
 }
 
+// TODO: performe shallow copy instead
 template<typename key_t, typename value_t>
 void
 HashMap<key_t, value_t>::rehash()
@@ -376,9 +391,10 @@ HashMap<key_t, value_t>::rehash()
     num_cells = 0;
     for(int i = 0; i < old_buckets.size(); i++) {
         for (Cell* cp = old_buckets[i]; cp; cp = cp->next) {
-            insert(cp->key, cp->value);
+            insert(cp->data.key, cp->data.value);
         }
     }
+    delete_buckets(old_buckets);
 }
 
 template <typename key_t, typename value_t>
@@ -395,9 +411,9 @@ operator<<(QDebug dbg, const HashMap<key_t, value_t> &mp)
         auto cp = mp.buckets[i];
         while(cp != nullptr) {
             dbg.nospace() << " { "
-                          << cp->key
+                          << cp->data.key
                           << " : "
-                          << cp->value
+                          << cp->data.value
                           << " }";
             cp = cp->next;
         }
