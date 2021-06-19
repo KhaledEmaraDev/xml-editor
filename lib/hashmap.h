@@ -106,7 +106,7 @@ public:
     HashMap(HashMap&& src);
     ~HashMap();
 
-    int size() { return num_cells; }
+    int size() const { return num_cells; }
     HashMap& operator=(const HashMap& src);
     HashMap& operator=(HashMap&& src);
 
