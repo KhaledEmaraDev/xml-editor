@@ -10,6 +10,7 @@ class XMLNode
 {
 public:
     XMLNode();
+    ~XMLNode();
 
 
     QString tag() const;
@@ -24,6 +25,7 @@ public:
     int attributes_size() const;
 
     bool is_leaf() const;
+    bool is_selfclosing() const;
 
     void add_attribute(const QString &key, const QString &value);
     void add_attribute(const MPair<QString, QString> &attribute);
@@ -32,9 +34,15 @@ public:
 
     HashMap<QString, QString> attributes() const;
 
+    friend class XMLTree;
+
+    XMLNode *parent() const;
+
 private:
     QString m_tag;
     QString m_value;
+    XMLNode * m_parent;
+    bool m_selfclosing;
     QList<XMLNode *> m_children;
     HashMap<QString, QString> m_attributes;
 };
