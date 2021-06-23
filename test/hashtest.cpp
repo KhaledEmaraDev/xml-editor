@@ -72,7 +72,7 @@ void test_hash_map() {
 
 }
 
-void testAll() {
+void hash_test_all() {
 //    test_hash_codes();
-    test_hash_map();
+//    test_hash_map();
 }

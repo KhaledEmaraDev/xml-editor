@@ -1,0 +1,12 @@
+<data version="3.0">
+   <synsets source="dict/data.adj" xml:base="data.adj.xml">
+    <synset id="a00001740" type="a">
+         <lex_filenum>00</lex_filenum>
+          <self_close id = "a" value = "true" />
+         <example>able to get a grant for the project</example>
+      </synset>
+      <synset id="a00653822" type="a">
+         <example>a crowned signet ring</example>
+      </synset>
+    </synsets>
+</data>

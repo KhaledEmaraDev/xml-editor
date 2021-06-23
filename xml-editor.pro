@@ -12,9 +12,11 @@ SOURCES += \
     codeeditor.cpp \
     highlighter.cpp \
     lib/xmlnode.cpp \
+    lib/xmltree.cpp \
     main.cpp \
     mainwidnow.cpp \
-    test/hashtest.cpp
+    test/hashtest.cpp \
+    test/xmltest.cpp
 
 HEADERS += \
     codeeditor.h \
@@ -23,6 +25,7 @@ HEADERS += \
     lib/hashmap.h \
     lib/mpair.h \
     lib/xmlnode.h \
+    lib/xmltree.h \
     mainwindow.h
 
 # Default rules for deployment.
