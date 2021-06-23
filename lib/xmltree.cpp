@@ -3,6 +3,7 @@
 #include <QStringBuilder>
 #include <QTextStream>
 #include <iostream>
+#include <QFileInfo>
 
 XMLTree::XMLTree()
     : m_root(nullptr), m_size(0)
@@ -83,7 +84,7 @@ void  XMLTree::dump_helper(XMLNode * node, const QString& indent, int depth, QTe
 
 void XMLTree::load(QTextStream &input)
 {
-    QFile file("E:\\Programming\\QT\\Code Editor\\xml-editor\\data\\data-so-sample.xml");
+    QFile file("../xml-editor/data/data-so-sample.xml");
     file.open(QFile::ReadOnly);
     QTextStream ts(&file);
     QString str = ts.readAll();
