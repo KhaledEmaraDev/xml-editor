@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     codeeditor.cpp \
+    compress/huffman.cpp \
     highlighter.cpp \
     lib/xmlnode.cpp \
     lib/xmltree.cpp \
@@ -20,6 +21,8 @@ SOURCES += \
 
 HEADERS += \
     codeeditor.h \
+    compress/huffman.h \
+    compress/hnode.h \
     highlighter.h \
     lib/hashcode.h \
     lib/hashmap.h \

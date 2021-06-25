@@ -25,65 +25,103 @@ public:
     /**
      * Default constructor
      */
-    HNode();
+    HNode()
+        : m_left(nullptr), m_right(nullptr), m_data(0)
+    {
+        // do nothing
+    }
+
+    ~HNode()
+    {
+        delete m_left;
+        m_left = nullptr;
+
+        delete m_right;
+        m_right = nullptr;
+    }
 
     /**
      * construct a leaf node with just data
      */
-    HNode(char data);
+    HNode(char data)
+        : m_left(nullptr), m_right(nullptr), m_data(data)
+    {
+        // do nothing
+    }
 
     /**
      * construct node with left, right and data
      */
-    HNode(HNode *left, HNode *right, char data);
+    HNode(HNode *left, HNode *right, char data)
+        : m_left(left), m_right(right), m_data(data)
+    {
+        // do nothing
+    }
 
     /**
      * @return data
      */
-    char get_data();
+    char data() const
+    {
+        return m_data;
+    }
 
     /**
      * @return left child
      */
-    HNode *get_left();
+    HNode *left() const
+    {
+        return m_left;
+    }
 
     /**
      * @return right child
      */
-    HNode *get_right();
+    HNode *right() const
+    {
+        return m_right;
+    }
 
     /**
      * overwite the data
      */
-    void set_data(char new_data);
+    void set_data(char data)
+    {
+        m_data = data;
+    }
 
     /**
      * overwite left child
      */
-    void set_left(HNode * new_left);
+    void set_left(HNode * left)
+    {
+        m_left = left;
+    }
 
     /**
      * overwite right child
      */
-    void set_right(HNode * new_right);
+    void set_right(HNode * right)
+    {
+        m_right = right;
+    }
 
     /**
      * @return ture if leaf node
      */
-    bool is_leaf();
-
-    /**
-     * friend method to delete a given tree
-     * @param node root of the tree
-     */
-    friend void del_tree(HNode *node);
+    bool is_leaf() const
+    {
+        return m_left == nullptr && m_right == nullptr;
+    }
 
     friend class Huffman;
 
 private:
-    HNode *left;
-    HNode *right;
-    char data;
+    HNode *m_left;
+    HNode *m_right;
+    char m_data;
 };
 
 #endif // End of the file
+
+
