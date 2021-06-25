@@ -17,7 +17,7 @@ private:
     XMLNode * m_root;
     int m_size;
     void load_helper(const QStringList &list, int pos, XMLNode *node);
-    void dump_helper(XMLNode *node, const QString &indent, int depth, QTextStream &output) const;
+    void dump_helper(XMLNode *node, int spaces, int depth, QTextStream &output) const;
 };
 
 #endif // XMLTREE_H

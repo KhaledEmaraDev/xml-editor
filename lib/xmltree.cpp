@@ -38,48 +38,62 @@ void XMLTree::dump(int spaces) const
     QString indent = "";
     for(int i = 0; i < spaces; i++)
         indent += " ";
-    dump_helper(m_root, indent, 0, ts);
+    dump_helper(m_root, spaces, 0, ts);
     while(!ts.atEnd())
         qDebug().noquote().nospace() << ts.readLine();
 
 }
 
-void  XMLTree::dump_helper(XMLNode * node, const QString& indent, int depth, QTextStream& output) const
+void  XMLTree::dump_helper(XMLNode * node, int spaces, int depth, QTextStream& output) const
 {
     if(node == nullptr)
         return;
 
-    QString local_indent;
-    local_indent.reserve(indent.size() * depth + 2);
-    for(int i = 0; i < depth; i++)
-        local_indent += indent;
+    QString indent;
+    QString end_line;
+    QString local_indent = "";
 
-    output << local_indent << "<" << node->tag() ;
+    if(spaces >= 0) {
+        indent.reserve(spaces + 2);
+        for(int i = 0; i < spaces; i++)
+            local_indent += " ";
+
+        indent.reserve(spaces * depth + 2);
+        for(int i = 0; i < depth; i++)
+            indent += local_indent;
+
+        end_line = "\n";
+    } else {
+        indent = "";
+        end_line = "";
+    }
+
+    output << indent << "<" << node->m_tag;
 
     for(const auto& attribute : node->m_attributes)
         output << " " << attribute.key << "=" << attribute.value << "";
 
     if(node->m_selfclosing) {
-        output << "/>" << '\n';
+        output << "/>" << end_line;
         return;
     }
-    output << ">" << '\n';
 
-    QString value = node->value().simplified();
-
-
-    if(value != "") {
-        QTextStream value_stream(&value);
-        while(!value_stream.atEnd()) {
-            output << local_indent  << local_indent <<  value_stream.readLine() << '\n';
+    output << ">" << end_line;
+ \
+    if(node->m_value != "") {
+        if(end_line != "") {
+            QStringList lines = node->m_value.split('\n');
+            for(int i = 0; i < lines.size(); ++i)
+                output << indent  << local_indent <<  lines[i].trimmed() << "\n";
+        } else {
+            output << node->m_value.simplified();
         }
     }
 
-
     for(XMLNode * child : qAsConst(node->m_children))
-        dump_helper(child, indent, depth + 1, output);
+        dump_helper(child, spaces, depth + 1, output);
 
-    output << local_indent << "</" << node->tag() << ">\n" ;
+    output << indent << "</" << node->m_tag << ">" << end_line ;
 }
 
 void XMLTree::load(QTextStream &input)
@@ -90,7 +104,14 @@ void XMLTree::load(QTextStream &input)
     QString str = ts.readAll();
 
     // regex to tokize the XML text
-    QRegExp rx("(<|>|</|=|/>|[\\w\\.\\$\\%\\^\\&\\#\\@\\*\\(\\-\\+\\-\\):]+|[\\s]+|\"[\\w\\s\\.\\$\\%\\^\\&\\#\\@\\*\\(\\-\\+\\-\\):/'`,;]+\"|-->|<!--)");
+    QString word = "[\\w\\.\\$\\%\\^\\&\\#\\@\\*\\(\\-\\+\\-\\):']+";
+    QString literal_string = "\"[\\w\\s\\.\\$\\%\\^\\&\\#\\@\\*\\(\\-\\+\\-\\):/'`,;]+\"";
+    QString white_spaces = "[\\s]+";
+    QString xml_tokens = "<|>|</|=|/>|-->|<!--";
+    QRegExp rx("(" + xml_tokens + "|"
+                   + white_spaces + "|"
+                   + literal_string + "|"
+                   + word + ")");
     //    rx.setMinimal(true);
     QStringList list;
     int pos = 0;
@@ -109,7 +130,9 @@ void XMLTree::load(QTextStream &input)
     m_root = new XMLNode;
     m_root->m_parent = nullptr;
     load_helper(list, 0, m_root);
-    dump(4);
+    dump(2);
+    dump(0);
+    dump();
 }
 
 void XMLTree::load_helper(const QStringList& list,
@@ -185,7 +208,7 @@ void XMLTree::load_helper(const QStringList& list,
         tag = list[pos++];
 
         //    qDebug() << tag;
-        node->set_tag(tag);
+        node->m_tag = tag;
 
         // ignore white spaces
         while(white_spaces.exactMatch(list[pos])) ++pos;
@@ -225,6 +248,7 @@ void XMLTree::load_helper(const QStringList& list,
 
 
         if(list[pos - 1] == ">") {
+            // normal node
             node->m_selfclosing = false;
             // extract node value
             // including white spaces
@@ -232,7 +256,7 @@ void XMLTree::load_helper(const QStringList& list,
             while(list[pos] != "<" && list[pos] != "</")
                 value += list[pos++];
             //    qDebug() << value;
-            node->set_value(value);
+            node->m_value = value.trimmed();
         } else {
             // self closing node
             node->m_selfclosing = true;
@@ -251,7 +275,7 @@ void XMLTree::load_helper(const QStringList& list,
             node->add_child(child);
             node = child;
         }
-        else if (node->m_parent != nullptr) {
+        else if (node->m_parent) {
             // the next node is a sibling
             // for the current node
             XMLNode * sibling = new XMLNode;
