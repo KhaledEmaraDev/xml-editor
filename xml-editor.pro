@@ -16,6 +16,7 @@ SOURCES += \
     lib/xmltree.cpp \
     main.cpp \
     mainwidnow.cpp \
+    test/compresstest.cpp \
     test/hashtest.cpp \
     test/xmltest.cpp
 

@@ -19,5 +19,5 @@ void test_xmltree()
 
 void xml_test_all()
 {
-    test_xmltree();
+//    test_xmltree();
 }

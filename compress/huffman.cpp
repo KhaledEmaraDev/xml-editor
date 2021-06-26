@@ -18,7 +18,6 @@
 #include <cmath>
 
 #include "huffman.h"
-//#include "hnode.h"
 
 using std::greater;
 using std::pair;
