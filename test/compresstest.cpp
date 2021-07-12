@@ -36,5 +36,5 @@ void test_huffman()
 
 void compress_test_all()
 {
-    test_huffman();
+//    test_huffman();
 }

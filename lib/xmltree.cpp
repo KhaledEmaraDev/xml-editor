@@ -3,6 +3,7 @@
 #include <QStringBuilder>
 #include <QTextStream>
 #include <iostream>
+#include <QStack>
 #include <QFileInfo>
 
 XMLTree::XMLTree()
@@ -79,7 +80,7 @@ void  XMLTree::dump_helper(XMLNode * node, int spaces, int depth, QTextStream& o
     }
 
     output << ">" << end_line;
- \
+    \
     if(node->m_value != "") {
         if(end_line != "") {
             QStringList lines = node->m_value.split('\n');
@@ -103,23 +104,15 @@ void XMLTree::load(QTextStream &input)
     QTextStream ts(&file);
     QString str = ts.readAll();
 
-    // regex to tokize the XML text
-    QString word = "[\\w\\.\\$\\%\\^\\&\\#\\@\\*\\(\\-\\+\\-\\):']+";
-    QString literal_string = "\"[\\w\\s\\.\\$\\%\\^\\&\\#\\@\\*\\(\\-\\+\\-\\):/'`,;]+\"";
-    QString white_spaces = "[\\s]+";
-    QString xml_tokens = "<|>|</|=|/>|-->|<!--";
-    QRegExp rx("(" + xml_tokens + "|"
-                   + white_spaces + "|"
-                   + literal_string + "|"
-                   + word + ")");
+
     //    rx.setMinimal(true);
     QStringList list;
     int pos = 0;
 
     // extract the capctured groups
-    while ((pos = rx.indexIn(str, pos)) != -1) {
-        list << rx.cap(1);
-        pos += rx.matchedLength();
+    while ((pos = xml_rx.indexIn(str, pos)) != -1) {
+        list << xml_rx.cap(1);
+        pos += xml_rx.matchedLength();
     }
     //    for(int i = 71780; i  < 71780 + 40 ; i++)
     qDebug() << list.size();
@@ -133,6 +126,170 @@ void XMLTree::load(QTextStream &input)
     dump(2);
     dump(0);
     dump();
+}
+
+int XMLTree::syntax_check(QTextStream &input, int capture_all)
+{
+    QFile file("../xml-editor/data/data-so-sample.xml");
+    file.open(QFile::ReadOnly);
+    QTextStream ts(&file);
+    QString str = ts.readAll();
+    QStringList list;
+    int pos = 0;
+
+    // extract the captured groups
+    while ((pos = xml_rx.indexIn(str, pos)) != -1) {
+        list << xml_rx.cap(1);
+        pos += xml_rx.matchedLength();
+    }
+
+    qDebug() << list.size();
+        qDebug() << list;
+
+    // regex to match white spaces
+    QRegExp white_spaces("[\\s]+");
+
+    QStack<QString> stack;
+    //    QString error;
+    QVector<QPair<int, QString>> errors;
+
+    int index = 0;
+    pos = 0;
+
+    auto throw_error = [&index, &errors, capture_all](const QString& error) {
+        if(capture_all)
+            errors.push_back({index, error});
+        else
+            throw qMakePair(index, error);
+    };
+
+    auto ignore_white_spaces = [&list, &pos, &white_spaces, &index]() {
+        while(++pos < list.size() &&
+              white_spaces.exactMatch(list[pos]))
+            index += list[pos].length();
+    };
+
+    while(pos < list.size()) {
+        // search for the start of the node
+        while(pos < list.size() &&
+              list[pos] != "<" &&
+              list[pos] != "</" /*&&
+              list[pos] != ">" &&
+              list[pos] != "/>"*/)
+        {
+            index += list[pos].length();
+            pos++;
+        }
+
+        if(pos == list.size())
+            break;
+
+        if(list[pos] == ">" || list[pos] == "/>") {
+            throw_error("Didn'r expected " + list[pos]);
+            index += list[pos].length();
+            pos++;
+            continue;
+
+        }
+
+        // closing tag
+        if(list[pos] == "</") {
+            index += list[pos].length();
+            ignore_white_spaces();
+
+            if(pos == list.size()) {
+                throw_error("Expected tag name");
+                break;
+            }
+
+            if(!(stack.size() && stack.top() ==  list[pos]))
+                throw_error( stack.size() ? "Mismatched tages: Expected " + stack.top()
+                                          : "Closing tag without matched opening tag");
+            if(stack.size())
+                stack.pop();
+            index += list[pos].length();
+            continue;
+        }
+
+        // opening tag
+        ignore_white_spaces();
+
+        if(pos == list.size()) {
+            throw_error("Expected opening tag");
+            break;
+        }
+
+        stack.push(list[pos]);
+
+        ignore_white_spaces();
+
+        if(pos == list.size()) {
+            throw_error("Expected > or />");
+            break;
+        }
+
+        // attributes
+        HashMap<QString, int> attributes;
+        while(list[pos] != ">" && list[pos] != "/>") {
+            if(attributes.contains(list[pos]))
+                throw_error("Repeated attributes");
+            else
+                attributes[list[pos]];
+
+            index += list[pos].length();
+            ignore_white_spaces();
+
+            if(pos == list.size()) {
+                throw_error("Expected > or />");
+                break;
+            }
+            if(list[pos] != "=")
+                throw_error("Expected =");
+            index += list[pos].length();
+
+            if(list[pos] == ">" || list[pos] == "/>")
+                break;
+
+            ignore_white_spaces();
+
+            if(pos == list.size()) {
+                throw_error("Expected attribute value");
+                break;
+            }
+
+            if(list[pos] == ">" || list[pos] == "/>") {
+                throw_error("Expected attribute value");
+                break;
+            }
+
+            ignore_white_spaces();
+
+            if(pos == list.size()) {
+                throw_error("Expected > or />");
+                break;
+            }
+        }
+
+        // selfclosing tag
+        if(list[pos] == "/>")
+        {
+            if(stack.size())
+                stack.pop();
+            else
+                throw_error("Didn't expect />");
+        }
+        index += list[pos].length();
+        pos++;
+        index += list[pos].length();
+
+    }
+
+    if(stack.size())
+        throw_error("Incomplete file");
+    qDebug() << errors;
+    return errors.empty();
+
+
 }
 
 void XMLTree::load_helper(const QStringList& list,
