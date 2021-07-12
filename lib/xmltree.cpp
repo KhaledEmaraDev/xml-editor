@@ -52,10 +52,10 @@ void  XMLTree::dump_helper(XMLNode * node, int spaces, int depth, QTextStream& o
 
     QString indent;
     QString end_line;
-    QString local_indent = "";
+    QString local_indent;
 
     if(spaces >= 0) {
-        indent.reserve(spaces + 2);
+        local_indent.reserve(spaces + 2);
         for(int i = 0; i < spaces; i++)
             local_indent += " ";
 
@@ -64,9 +64,6 @@ void  XMLTree::dump_helper(XMLNode * node, int spaces, int depth, QTextStream& o
             indent += local_indent;
 
         end_line = "\n";
-    } else {
-        indent = "";
-        end_line = "";
     }
 
     output << indent << "<" << node->m_tag;
@@ -97,35 +94,29 @@ void  XMLTree::dump_helper(XMLNode * node, int spaces, int depth, QTextStream& o
     output << indent << "</" << node->m_tag << ">" << end_line ;
 }
 
-void XMLTree::load(QTextStream &input)
+QStringList XMLTree::tokenize(QTextStream &input)
 {
-    QFile file("../xml-editor/data/data-so-sample.xml");
-    file.open(QFile::ReadOnly);
-    QTextStream ts(&file);
-    QString str = ts.readAll();
+    // regex to tokize the XML text
+    const QString word { "[\\w\\.\\$\\%\\^\\&\\#\\@\\*\\(\\-\\+\\-\\):']+" };
+    const QString literal_string { "\"[\\w\\s\\.\\$\\%\\^\\&\\#\\@\\*\\(\\-\\+\\-\\):/'`,;]+\"" };
+    const QString white_spaces { "[\\s]+" };
+    const QString xml_tokens { "<|>|</|=|/>|-->|<!--|<\\?|\\?>" };
 
-
-    //    rx.setMinimal(true);
-    QStringList list;
+    const QRegExp xml_rx { "(" + xml_tokens + "|"
+                               + white_spaces + "|"
+                               + literal_string + "|"
+                               + word + ")" };
     int pos = 0;
+    QStringList list;
+    QString str = input.readAll();
 
     // extract the capctured groups
     while ((pos = xml_rx.indexIn(str, pos)) != -1) {
         list << xml_rx.cap(1);
         pos += xml_rx.matchedLength();
     }
-    //    for(int i = 71780; i  < 71780 + 40 ; i++)
-    qDebug() << list.size();
 
-    // start loading the tree
-    if(m_root)
-        delete m_root;
-    m_root = new XMLNode;
-    m_root->m_parent = nullptr;
-    load_helper(list, 0, m_root);
-    dump(2);
-    dump(0);
-    dump();
+    return list;
 }
 
 int XMLTree::syntax_check(QTextStream &input, int capture_all)
@@ -133,24 +124,19 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
     QFile file("../xml-editor/data/data-so-sample.xml");
     file.open(QFile::ReadOnly);
     QTextStream ts(&file);
-    QString str = ts.readAll();
-    QStringList list;
+
     int pos = 0;
 
     // extract the captured groups
-    while ((pos = xml_rx.indexIn(str, pos)) != -1) {
-        list << xml_rx.cap(1);
-        pos += xml_rx.matchedLength();
-    }
+   QStringList list = tokenize(input);
 
     qDebug() << list.size();
-        qDebug() << list;
+    qDebug() << list;
 
     // regex to match white spaces
     QRegExp white_spaces("[\\s]+");
 
     QStack<QString> stack;
-    //    QString error;
     QVector<QPair<int, QString>> errors;
 
     int index = 0;
@@ -174,8 +160,8 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
         while(pos < list.size() &&
               list[pos] != "<" &&
               list[pos] != "</" /*&&
-              list[pos] != ">" &&
-              list[pos] != "/>"*/)
+                    list[pos] != ">" &&
+                    list[pos] != "/>"*/)
         {
             index += list[pos].length();
             pos++;
@@ -290,6 +276,26 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
     return errors.empty();
 
 
+}
+
+void XMLTree::load(QTextStream &input)
+{
+    QFile file("../xml-editor/data/data-so-sample.xml");
+    file.open(QFile::ReadOnly);
+    QTextStream ts(&file);
+
+    QStringList list = tokenize(ts);
+    qDebug() << list.size();
+
+    // start loading the tree
+    if(m_root)
+        delete m_root;
+    m_root = new XMLNode;
+    m_root->m_parent = nullptr;
+    load_helper(list, 0, m_root);
+    dump(2);
+    dump(0);
+    dump();
 }
 
 void XMLTree::load_helper(const QStringList& list,
