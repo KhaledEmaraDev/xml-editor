@@ -241,13 +241,16 @@ void huffman::write_bit(ofstream &output_file, bool bit, bool final)
 {
     static char bitcount = 0;
     static char byte = 0;
+
     if (final && bitcount)
     {
         byte <<= NUM_BITS - bitcount;
         output_file.write(&byte, 1);
     }
+
     byte = (byte << 1) | bit;
     bitcount++;
+
     if (bitcount == NUM_BITS)
     {
         output_file.write(&byte, 1);
@@ -265,9 +268,7 @@ void huffman::write_byte(ofstream &output_file, char byte)
 
 bool huffman::verify_sign(ifstream &input_file)
 {
-    if (read_byte(input_file) == SIGN)
-        return true;
-    return false;
+    return read_byte(input_file) == SIGN;
 }
 
 void huffman::store_sign(ofstream &output_file)

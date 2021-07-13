@@ -23,13 +23,9 @@ QString XMLTree::dump(int spaces) const
     QString builder;
     QTextStream ts(&builder);
 
-
-//    QString indent = "";
-//    for(int i = 0; i < spaces; i++)
-//        indent += " ";
     dump_helper(m_root, spaces, 0, ts);
-    while(!ts.atEnd())
-        qDebug().noquote().nospace() << ts.readLine();
+//    while(!ts.atEnd())
+//        qDebug().noquote().nospace() << ts.readLine();
     return builder;
 
 }
@@ -83,6 +79,11 @@ void  XMLTree::dump_helper(XMLNode * node, int spaces, int depth, QTextStream& o
     output << indent << "</" << node->m_tag << ">" << end_line ;
 }
 
+bool XMLTree::is_token(const QString& token) {
+    const QRegExp xml_tokens { "<|>|</|=|/>|-->|<!--|<\\?|\\?>" };
+    return xml_tokens.exactMatch(token);
+}
+
 QStringList XMLTree::tokenize(QTextStream &input)
 {
     // regex to tokize the XML text
@@ -108,19 +109,19 @@ QStringList XMLTree::tokenize(QTextStream &input)
     return list;
 }
 
-int XMLTree::syntax_check(QTextStream &input, int capture_all)
+int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 {
-    QFile file("../xml-editor/data/data-so-sample.xml");
-    file.open(QFile::ReadOnly);
-    QTextStream ts(&file);
+    //    QFile file("../xml-editor/data/data-so-sample.xml");
+    //    file.open(QFile::ReadOnly);
+    //    QTextStream ts(&file);
 
-    int pos = 0;
+
 
     // extract the captured groups
     QStringList list = tokenize(input);
 
-    qDebug() << list.size();
-    qDebug() << list;
+    //    qDebug() << list.size();
+    //    qDebug() << list;
 
     // regex to match white spaces
     QRegExp white_spaces("[\\s]+");
@@ -129,7 +130,7 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
     QVector<QPair<int, QString>> errors;
 
     int index = 0;
-    pos = 0;
+    int pos = 0;
 
     auto throw_error = [&index, &errors, capture_all](const QString& error) {
         if(capture_all)
@@ -149,8 +150,8 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
         while(pos < list.size() &&
               list[pos] != "<" &&
               list[pos] != "</" /*&&
-                          list[pos] != ">" &&
-                          list[pos] != "/>"*/)
+                                      list[pos] != ">" &&
+                                      list[pos] != "/>"*/)
         {
             index += list[pos].length();
             pos++;
@@ -177,6 +178,12 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
                 break;
             }
 
+            if(is_token(list[pos])) {
+                throw_error("Expected tag name");
+                pos++;
+                continue;
+            }
+
             if(!(stack.size() && stack.top() ==  list[pos]))
                 throw_error( stack.size() ? "Mismatched tages: Expected " + stack.top()
                                           : "Closing tag without matched opening tag");
@@ -194,6 +201,12 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
             break;
         }
 
+        if(is_token(list[pos])) {
+            throw_error("Expected tag name");
+            pos++;
+            continue;
+        }
+
         stack.push(list[pos]);
 
         ignore_white_spaces();
@@ -207,7 +220,7 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
         HashMap<QString, int> attributes;
         while(list[pos] != ">" && list[pos] != "/>") {
             if(attributes.contains(list[pos]))
-                throw_error("Repeated attributes");
+                throw_error("Repeated attributes: \"" + list[pos] + "\"");
             else
                 attributes[list[pos]];
 
@@ -227,12 +240,7 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
 
             ignore_white_spaces();
 
-            if(pos == list.size()) {
-                throw_error("Expected attribute value");
-                break;
-            }
-
-            if(list[pos] == ">" || list[pos] == "/>") {
+            if(pos == list.size() || list[pos] == ">" || list[pos] == "/>") {
                 throw_error("Expected attribute value");
                 break;
             }
@@ -255,12 +263,20 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
         }
         index += list[pos].length();
         pos++;
-        index += list[pos].length();
+
 
     }
 
-    if(stack.size())
-        throw_error("Incomplete file");
+    if(stack.size()) {
+        QString tags;
+        tags.reserve(stack.size() * 10);
+
+        while(stack.size()) {
+            tags += " <" + stack.top() + ">";
+            stack.pop();
+        }
+        throw_error("Incomplete tags:" + tags);
+    }
 
     qDebug() << errors;
     if(capture_all && errors.size())
@@ -273,12 +289,12 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
 
 void XMLTree::load(QTextStream &input)
 {
-    QFile file("../xml-editor/data/data-so-sample.xml");
-    file.open(QFile::ReadOnly);
-    QTextStream ts(&file);
+//    QFile file("../xml-editor/data/data-so-sample.xml");
+//    file.open(QFile::ReadOnly);
+//    QTextStream ts(&file);
 
     QStringList list = tokenize(input);
-    qDebug() << list.size();
+//    qDebug() << list.size();
 
     // start loading the tree
     if(m_root)

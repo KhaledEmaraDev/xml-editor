@@ -12,7 +12,8 @@ public:
     QString dump(int spaces = -1) const;
     void load(QTextStream& input);
 
-    static int syntax_check(QTextStream& input, int capture_all = 1);
+    static int syntax_check(QTextStream& input, bool capture_all = true);
+    static bool is_token(const QString& token);
 
     int size() const { return m_size;}
 private:
