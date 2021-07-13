@@ -12,9 +12,10 @@ int main(int argc, char *argv[])
     hash_test_all();
     xml_test_all();
     compress_test_all();
-//    MainWindow window;
-//    window.resize(640, 512);
-//    window.show();
+
+    MainWindow window;
+    window.resize(640, 512);
+    window.show();
 
     return a.exec();
 }

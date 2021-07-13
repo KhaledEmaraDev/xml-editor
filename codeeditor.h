@@ -19,6 +19,9 @@ class CodeEditor : public QPlainTextEdit
 public:
     CodeEditor(QWidget *parent = nullptr);
 
+    void displayError(int line, const QString &msg);
+    void clearErrors();
+
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
 
@@ -32,6 +35,9 @@ private slots:
 
 private:
     QWidget *lineNumberArea;
+
+    QTextEdit::ExtraSelection currentLineSelection;
+    QList<QTextEdit::ExtraSelection> errorSelections;
 };
 
 class LineNumberArea : public QWidget

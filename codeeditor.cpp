@@ -1,5 +1,6 @@
 #include "codeeditor.h"
 
+#include <QDebug>
 #include <QPainter>
 #include <QTextBlock>
 
@@ -13,6 +14,41 @@ CodeEditor::CodeEditor(QWidget *parent) : QPlainTextEdit(parent)
 
     updateLineNumberAreaWidth(0);
     highlightCurrentLine();
+}
+
+void CodeEditor::displayError(int line, const QString &msg) {
+    QTextCursor errorCursor(document()->findBlockByLineNumber(line - 1));
+    errorCursor.movePosition(QTextCursor::EndOfLine);
+
+    QList<QTextEdit::ExtraSelection> extraSelections;
+
+    if (!isReadOnly()) {
+        QTextEdit::ExtraSelection selection;
+
+        QColor lineColor = QColor(Qt::red).lighter(180);
+
+        selection.format.setBackground(lineColor);
+        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+        selection.cursor = errorCursor;
+        selection.cursor.clearSelection();
+        errorSelections.append(selection);
+    }
+
+    extraSelections.append(currentLineSelection);
+    extraSelections.append(errorSelections);
+    setExtraSelections(extraSelections);
+
+    QTextCharFormat errorFormat;
+    errorFormat.setFontItalic(true);
+    errorFormat.setFontWeight(QFont::ExtraBold);
+    errorFormat.setForeground(Qt::red);
+    errorCursor.setCharFormat(errorFormat);
+
+    errorCursor.insertText(" Error: " + msg);
+}
+
+void CodeEditor::clearErrors() {
+    errorSelections.clear();
 }
 
 int CodeEditor::lineNumberAreaWidth()
@@ -66,9 +102,11 @@ void CodeEditor::highlightCurrentLine()
         selection.format.setProperty(QTextFormat::FullWidthSelection, true);
         selection.cursor = textCursor();
         selection.cursor.clearSelection();
-        extraSelections.append(selection);
+        currentLineSelection = selection;
     }
 
+    extraSelections.append(currentLineSelection);
+    extraSelections.append(errorSelections);
     setExtraSelections(extraSelections);
 }
 
