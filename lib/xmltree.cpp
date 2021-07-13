@@ -9,18 +9,6 @@
 XMLTree::XMLTree()
     : m_root(nullptr), m_size(0)
 {
-    //    root = new XMLNode;
-    //    root->set_tag("Tag1");
-    //    root->add_attribute("att1", "val1");
-    //    root->add_attribute("att2", "val2");
-
-    //    XMLNode * node = new XMLNode;
-    //    node->set_tag("Tag2");
-    //    node->set_value("VALUE");
-    //    node->add_attribute("att1.1", "val1.1");
-    //    node->add_attribute("att2.1", "val2.1");
-
-    //    root->add_child(node);
 
 }
 
@@ -30,18 +18,19 @@ XMLTree::~XMLTree()
     m_root = nullptr;
 }
 
-void XMLTree::dump(int spaces) const
+QString XMLTree::dump(int spaces) const
 {
     QString builder;
     QTextStream ts(&builder);
 
 
-    QString indent = "";
-    for(int i = 0; i < spaces; i++)
-        indent += " ";
+//    QString indent = "";
+//    for(int i = 0; i < spaces; i++)
+//        indent += " ";
     dump_helper(m_root, spaces, 0, ts);
     while(!ts.atEnd())
         qDebug().noquote().nospace() << ts.readLine();
+    return builder;
 
 }
 
@@ -128,7 +117,7 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
     int pos = 0;
 
     // extract the captured groups
-   QStringList list = tokenize(input);
+    QStringList list = tokenize(input);
 
     qDebug() << list.size();
     qDebug() << list;
@@ -160,8 +149,8 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
         while(pos < list.size() &&
               list[pos] != "<" &&
               list[pos] != "</" /*&&
-                    list[pos] != ">" &&
-                    list[pos] != "/>"*/)
+                          list[pos] != ">" &&
+                          list[pos] != "/>"*/)
         {
             index += list[pos].length();
             pos++;
@@ -272,7 +261,11 @@ int XMLTree::syntax_check(QTextStream &input, int capture_all)
 
     if(stack.size())
         throw_error("Incomplete file");
+
     qDebug() << errors;
+    if(capture_all && errors.size())
+        throw  errors;
+
     return errors.empty();
 
 
@@ -284,7 +277,7 @@ void XMLTree::load(QTextStream &input)
     file.open(QFile::ReadOnly);
     QTextStream ts(&file);
 
-    QStringList list = tokenize(ts);
+    QStringList list = tokenize(input);
     qDebug() << list.size();
 
     // start loading the tree
@@ -293,9 +286,9 @@ void XMLTree::load(QTextStream &input)
     m_root = new XMLNode;
     m_root->m_parent = nullptr;
     load_helper(list, 0, m_root);
-    dump(2);
-    dump(0);
-    dump();
+    //    dump(2);
+    //    dump(0);
+    //    dump();
 }
 
 void XMLTree::load_helper(const QStringList& list,

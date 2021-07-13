@@ -9,7 +9,7 @@ public:
     XMLTree();
     ~XMLTree();
 
-    void dump(int spaces = -1) const;
+    QString dump(int spaces = -1) const;
     void load(QTextStream& input);
 
     static int syntax_check(QTextStream& input, int capture_all = 1);
