@@ -63,6 +63,8 @@ public:
      */
     int size() const { return m_size;}
 
+    XMLNode *root() const;
+
 private:
     /**
      * @brief load_helper

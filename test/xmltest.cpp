@@ -1,4 +1,7 @@
 #include "lib/xmltree.h"
+#include "lib/json.h"
+
+#include <QFile>
 
 void test_xmltree()
 {
@@ -14,7 +17,11 @@ void test_xmltree()
     << "VALUE value also \n still value \n"
     << "</Tag2>\n"
     << "</Tag1>\n";
-    tree.load(ts);
+        QFile file("../xml-editor/data/data-so-sample.xml");
+        file.open(QFile::ReadOnly);
+        QTextStream fs(&file);
+    tree.load(fs);
+    JSON::xml2json(tree, 2);
 }
 
 void test_xml_syntax_check()
@@ -36,6 +43,6 @@ void test_xml_syntax_check()
 
 void xml_test_all()
 {
-//    test_xmltree();
-    test_xml_syntax_check();
+    test_xmltree();
+//    test_xml_syntax_check();
 }

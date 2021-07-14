@@ -109,6 +109,11 @@ QStringList XMLTree::tokenize(QTextStream &input)
     return list;
 }
 
+XMLNode *XMLTree::root() const
+{
+    return m_root;
+}
+
 int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 {
     //    QFile file("../xml-editor/data/data-so-sample.xml");
@@ -150,8 +155,8 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
         while(pos < list.size() &&
               list[pos] != "<" &&
               list[pos] != "</" /*&&
-                                      list[pos] != ">" &&
-                                      list[pos] != "/>"*/)
+              list[pos] != ">" &&
+              list[pos] != "/>"*/)
         {
             index += list[pos].length();
             pos++;
@@ -301,7 +306,7 @@ void XMLTree::load(QTextStream &input)
 //    QTextStream ts(&file);
 
     QStringList list = tokenize(input);
-    qDebug() << list;
+//    qDebug() << list;
 
     // start loading the tree
     if(m_root) {

@@ -14,6 +14,8 @@ SOURCES += \
     codeeditor.cpp \
     compress/huffman.cpp \
     highlighter.cpp \
+    lib/json.cpp \
+    lib/jsonnode.cpp \
     lib/xmlnode.cpp \
     lib/xmltree.cpp \
     main.cpp \
@@ -29,6 +31,8 @@ HEADERS += \
     highlighter.h \
     lib/hashcode.h \
     lib/hashmap.h \
+    lib/json.h \
+    lib/jsonnode.h \
     lib/mpair.h \
     lib/xmlnode.h \
     lib/xmltree.h \
