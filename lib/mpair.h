@@ -9,6 +9,7 @@ template <typename key_t, typename value_t>
 /**
  * @brief The MPair struct
  *        Map pair is a key/value pair used in HashMap
+ *  All the operations has complexity of O(sizeof(key) + sizeof(value))
  */
 struct MPair {
     const key_t key;

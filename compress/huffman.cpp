@@ -96,7 +96,7 @@ HNode *huffman::generate_tree(vector<int>& freqs)
             greater<pair<int, HNode *>>> pq;
 
     // create leaf nodes
-    for (int i = 0; i < 256; i++)
+    for (size_t i = 0; i < freqs.size(); i++)
     {
         if (freqs[i] != 0)
             pq.push({ freqs[i], new HNode(i) });

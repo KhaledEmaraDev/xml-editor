@@ -10,6 +10,7 @@
   *
   * This file defines HNode class
   * A simple tree node used to in huffman tree implementation
+  * All the the operations has complexity of O(1)
   *
   * @author Hassan El-shazly
   * @date Last Edit Jun-2021
