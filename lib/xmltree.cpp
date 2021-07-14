@@ -219,6 +219,13 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
         // attributes
         HashMap<QString, int> attributes;
         while(list[pos] != ">" && list[pos] != "/>") {
+
+            if(is_token(list[pos])) {
+                throw_error("Didn't expect \"" + list[pos] +"\"");
+                pos++;
+                continue;
+            }
+
             if(attributes.contains(list[pos]))
                 throw_error("Repeated attributes: \"" + list[pos] + "\"");
             else
@@ -297,8 +304,10 @@ void XMLTree::load(QTextStream &input)
 //    qDebug() << list.size();
 
     // start loading the tree
-    if(m_root)
+    if(m_root) {
         delete m_root;
+        m_size = 0;
+    }
     m_root = new XMLNode;
     m_root->m_parent = nullptr;
     load_helper(list, 0, m_root);
