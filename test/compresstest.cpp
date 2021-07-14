@@ -11,8 +11,8 @@ void test_huffman()
     std::string decoded_outputfile = "../xml-editor/data/data.adj.outhuff";
 
     qDebug() << "Compressing ...";
-    ifstream input_file(inputfile, std::ios::in | std::ios::binary);
-    ofstream output_file(encoded_outputfile, std::ios::out | std::ios::binary);
+    std::ifstream input_file(inputfile, std::ios::in | std::ios::binary);
+    std::ofstream output_file(encoded_outputfile, std::ios::out | std::ios::binary);
 
     float ratio = huff.encode(input_file, output_file);
     qDebug() << "Compression ratio: " << ratio * 100 << "%";
@@ -22,8 +22,8 @@ void test_huffman()
 
     qDebug() << "Decompressing ...";
 
-    ifstream encoded_input_file(encoded_outputfile, std::ios::in | std::ios::binary);
-    ofstream encoded_output_file(decoded_outputfile, std::ios::out | std::ios::binary);
+    std::ifstream encoded_input_file(encoded_outputfile, std::ios::in | std::ios::binary);
+    std::ofstream encoded_output_file(decoded_outputfile, std::ios::out | std::ios::binary);
 
     huff.decode(encoded_input_file, encoded_output_file);
 

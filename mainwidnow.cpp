@@ -1,9 +1,15 @@
 #include <QtWidgets>
 #include <QTextStream>
 
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+
 #include "mainwindow.h"
 
 #include "lib/xmltree.h"
+#include "compress/huffman.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -46,7 +52,11 @@ void MainWindow::newFile()
 void MainWindow::open()
 {
     if (maybeSave()) {
-        QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "../xml-editor/samples/", "XML files (*.xml)");
+        QString fileName = QFileDialog::getOpenFileName(this,
+                                                        tr("Open File"),
+                                                        "../xml-editor/samples/",
+                                                        "XML files (*.xml);;Compressed XML files (*.hxml)"
+                                                       );
         if (!fileName.isEmpty())
             loadFile(fileName);
     }
@@ -63,7 +73,11 @@ bool MainWindow::save()
 
 bool MainWindow::saveAs()
 {
-    QFileDialog dialog(this, tr("Save File As"), "../xml-editor/samples/", "XML files (*.xml)");
+    QFileDialog dialog(this,
+                       tr("Save File As"),
+                       "../xml-editor/samples/",
+                       "XML files (*.xml);;Compressed XML files (*.hxml)"
+                      );
     dialog.setWindowModality(Qt::WindowModal);
     dialog.setAcceptMode(QFileDialog::AcceptSave);
     if (dialog.exec() != QDialog::Accepted)
@@ -342,55 +356,102 @@ bool MainWindow::maybeSave()
 
 void MainWindow::loadFile(const QString &fileName)
 {
-    QFile file(fileName);
-    if (!file.open(QFile::ReadOnly | QFile::Text)) {
-        QMessageBox::warning(this, tr("Application"),
-                             tr("Cannot read file %1:\n%2.")
-                             .arg(QDir::toNativeSeparators(fileName), file.errorString()));
-        return;
-    }
+    QFileInfo fileInfo(fileName);
 
-    QTextStream in(&file);
+    if (fileInfo.suffix() == "xml") {
+        QFile file(fileName);
+        if (!file.open(QFile::ReadOnly | QFile::Text)) {
+            QMessageBox::warning(this, tr("Application"),
+                                 tr("Cannot read file %1:\n%2.")
+                                 .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+            return;
+        }
+
+        QTextStream in(&file);
 #ifndef QT_NO_CURSOR
-    QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+        QGuiApplication::setOverrideCursor(Qt::WaitCursor);
 #endif
-    editor->setPlainText(in.readAll());
+        editor->setPlainText(in.readAll());
 #ifndef QT_NO_CURSOR
-    QGuiApplication::restoreOverrideCursor();
+        QGuiApplication::restoreOverrideCursor();
 #endif
+    } else if (fileInfo.suffix() == "hxml") {
+        std::filebuf fb;
+        if (fb.open(fileName.toStdString(), std::ios_base::in | std::ios_base::binary)) {
+            std::istream is(&fb);
+
+            std::stringbuf sb;
+            std::ostream os(&sb);
+
+            huffman huff;
+            huff.decode(is, os);
+
+#ifndef QT_NO_CURSOR
+            QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+#endif
+            editor->setPlainText(QString::fromStdString(sb.str()));
+#ifndef QT_NO_CURSOR
+            QGuiApplication::restoreOverrideCursor();
+#endif
+
+            fb.close();
+        }
+    }
 
     setCurrentFile(fileName);
     statusBar()->showMessage(tr("File loaded"));
-
-    in.seek(0);
-    try {
-        XMLTree::syntax_check(in);
-    }  catch (const QVector<QPair<int, QString>> &ex) {
-        for (const auto & error: ex) {
-            editor->displayError(error.first, error.second);
-        }
-    }
+    checkSyntax();
 }
 
 bool MainWindow::saveFile(const QString &fileName)
 {
     QString errorMessage;
 
-    QGuiApplication::setOverrideCursor(Qt::WaitCursor);
-    QSaveFile file(fileName);
-    if (file.open(QFile::WriteOnly | QFile::Text)) {
-        QTextStream out(&file);
-        editor->clearErrors();
-        out << editor->toPlainText();
-        if (!file.commit()) {
-            errorMessage = tr("Cannot write file %1:\n%2.")
+    QFileInfo fileInfo(fileName);
+
+    if (fileInfo.suffix() == "xml") {
+        QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+
+        QSaveFile file(fileName);
+        if (file.open(QFile::WriteOnly | QFile::Text)) {
+            QTextStream out(&file);
+            editor->clearErrors();
+            out << editor->toPlainText();
+            if (!file.commit()) {
+                errorMessage = tr("Cannot write file %1:\n%2.")
+                        .arg(QDir::toNativeSeparators(fileName), file.errorString());
+            }
+        } else {
+            errorMessage = tr("Cannot open file %1 for writing:\n%2.")
                     .arg(QDir::toNativeSeparators(fileName), file.errorString());
         }
+
+        QGuiApplication::restoreOverrideCursor();
+    } else if (fileInfo.suffix() == "hxml") {
+        QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+
+        std::filebuf fb;
+        if (fb.open(fileName.toStdString(), std::ios_base::out | std::ios_base::binary)) {
+            editor->clearErrors();
+
+            std::ostream os(&fb);
+
+            std::stringbuf sb(editor->toPlainText().toStdString(), std::ios_base::in);
+            std::istream is(&sb);
+
+            huffman huff;
+            huff.encode(is, os);
+
+            fb.close();
+        } else {
+            errorMessage = tr("Cannot open file %1 for writing.")
+                    .arg(QDir::toNativeSeparators(fileName));
+        }
+
+        QGuiApplication::restoreOverrideCursor();
     } else {
-        errorMessage = tr("Cannot open file %1 for writing:\n%2.")
-                .arg(QDir::toNativeSeparators(fileName), file.errorString());
+        errorMessage = tr("Unkown file type");
     }
-    QGuiApplication::restoreOverrideCursor();
 
     if (!errorMessage.isEmpty()) {
         QMessageBox::warning(this, tr("Application"), errorMessage);

@@ -21,10 +21,10 @@
 #include "hnode.h"
 #include "lib/hashmap.h"
 
-using std::ifstream;
+using std::istream;
 using std::vector;
 using std::ios;
-using std::ofstream;
+using std::ostream;
 using std::string;
 
 class huffman
@@ -45,7 +45,7 @@ public:
      *
      * @complexity O(size)
      */
-    float encode(ifstream &input_file, ofstream &output_file);
+    float encode(istream &input_file, ostream &output_file);
 
     /**
      * @brief decode
@@ -53,7 +53,7 @@ public:
      * @param input_file  an opend file with binary read permissions
      * @param output_file an opend file with binary write permissions
      */
-    void decode(ifstream &input_file, ofstream &output_file);
+    void decode(istream &input_file, ostream &output_file);
 
 private:
     /**
@@ -61,14 +61,14 @@ private:
      * store internal buffer to hold the information unit(Byte)
      * @complexity O(1)
      */
-    bool read_bit(ifstream &input_file, bool final = 0);
+    bool read_bit(istream &input_file, bool final = 0);
 
     /**
      * read byte from input stream
      * synchronous with read_bit()
      * @complexity O(1)
      */
-    char read_byte(ifstream &input_file);
+    char read_byte(istream &input_file);
 
     /**
      * write bit to output stream
@@ -76,20 +76,20 @@ private:
      * @param final write to the stored buffer
      * @complexity O(1)
      */
-    void write_bit(ofstream &output_file, bool bit, bool final = 0);
+    void write_bit(ostream &output_file, bool bit, bool final = 0);
 
     /**
      * write byte to output stream
      * synchronous with write_bit()
      * @complexity O(1)
      */
-    void write_byte(ofstream &output_file, char byte);
+    void write_byte(ostream &output_file, char byte);
 
     /**
      * read entire file to text
      * @complexity O(sizeof(input_file))
      */
-    void read_file(ifstream &input_file);
+    void read_file(istream &input_file);
 
     /**
      * verify signature of the file
@@ -97,20 +97,20 @@ private:
      * compresed with the same program
      * @complexity O(1)
      */
-    bool verify_sign(ifstream &input_file);
+    bool verify_sign(istream &input_file);
 
     /**
      * write signature to an output file
      * @complexity O(1)
      */
-    void store_sign(ofstream &output_file);
+    void store_sign(ostream &output_file);
 
     /**
      * store huffman tree to output filesteam
      * @complexity O(sizeof(huffman tree))
      *  O(1) as the size of huffman tree can't exceed 512 node
      */
-    void store_tree(ofstream &output_file, HNode *root);
+    void store_tree(ostream &output_file, HNode *root);
 
     /**
      * calculate the comprssed file size based on codes and their freqs
@@ -123,19 +123,19 @@ private:
      * encode text based on the given charcter map
      * @complexity O(sizeof(input_file))
      */
-    void encode_file(ofstream &output_file, HashMap<char, string> &codes);
+    void encode_file(ostream &output_file, HashMap<char, string> &codes);
 
     /**
      * decode text based on the given huffman tree
      * @complexity O(sizeof(input_file))
      */
-    void decode_file(ifstream &input_file, ofstream &output_file, HNode *root);
+    void decode_file(istream &input_file, ostream &output_file, HNode *root);
 
     /**
      * read huffman tree from encoded data
      * it must be prececed by verify sign
      */
-    HNode *read_tree(ifstream &input_file);
+    HNode *read_tree(istream &input_file);
 
     /**
      * compute the frequencies of the charcters on the text

@@ -33,7 +33,7 @@ huffman::huffman()
     // do nthing
 }
 
-float huffman::encode(ifstream &input_file, ofstream &output_file)
+float huffman::encode(istream &input_file, ostream &output_file)
 {
 
     read_file(input_file);
@@ -58,7 +58,7 @@ float huffman::encode(ifstream &input_file, ofstream &output_file)
     return ratio;
 }
 
-void huffman::decode(ifstream &input_file, ofstream &output_file)
+void huffman::decode(istream &input_file, ostream &output_file)
 {
     if (!verify_sign(input_file))
         throw "huffman::decode -> file not valid";
@@ -71,7 +71,7 @@ void huffman::decode(ifstream &input_file, ofstream &output_file)
     delete root;
 }
 
-void huffman::read_file(ifstream &input_file)
+void huffman::read_file(istream &input_file)
 {
     input_file.seekg(0, std::ios::end);
     text.resize(input_file.tellg());
@@ -115,7 +115,7 @@ HNode *huffman::generate_tree(vector<int>& freqs)
     return pq.top().second;
 }
 
-void huffman::store_tree(ofstream &output_file, HNode *root)
+void huffman::store_tree(ostream &output_file, HNode *root)
 {
     if (root == nullptr)
         return;
@@ -160,7 +160,7 @@ uint64_t huffman::file_size(vector<int>& freqs, HashMap<char, string> &codes)
     return ceil((double)fsize / 8);
 }
 
-void huffman::encode_file(ofstream &output_file, HashMap<char, string> &codes)
+void huffman::encode_file(ostream &output_file, HashMap<char, string> &codes)
 {
     for (const auto &ch : text)
         for (const auto &bit : codes[ch])
@@ -170,7 +170,7 @@ void huffman::encode_file(ofstream &output_file, HashMap<char, string> &codes)
         write_bit(output_file, bit - '0');
 }
 
-HNode *huffman::read_tree(ifstream &input_file)
+HNode *huffman::read_tree(istream &input_file)
 {
     if (read_bit(input_file))
     {
@@ -185,7 +185,7 @@ HNode *huffman::read_tree(ifstream &input_file)
     }
 }
 
-void huffman::decode_file(ifstream &input_file, ofstream &output_file, HNode *root)
+void huffman::decode_file(istream &input_file, ostream &output_file, HNode *root)
 {
     HNode *curr = root;
     while (true)
@@ -206,7 +206,7 @@ void huffman::decode_file(ifstream &input_file, ofstream &output_file, HNode *ro
     }
 }
 
-bool huffman::read_bit(ifstream &input_file, bool final)
+bool huffman::read_bit(istream &input_file, bool final)
 {
     static char bitcount = NUM_BITS;
     static char byte = 0;
@@ -229,7 +229,7 @@ bool huffman::read_bit(ifstream &input_file, bool final)
     return bit;
 }
 
-char huffman::read_byte(ifstream &input_file)
+char huffman::read_byte(istream &input_file)
 {
     char byte = 0;
     for (int i = 0; i < NUM_BITS; i++)
@@ -237,7 +237,7 @@ char huffman::read_byte(ifstream &input_file)
     return byte;
 }
 
-void huffman::write_bit(ofstream &output_file, bool bit, bool final)
+void huffman::write_bit(ostream &output_file, bool bit, bool final)
 {
     static char bitcount = 0;
     static char byte = 0;
@@ -257,7 +257,7 @@ void huffman::write_bit(ofstream &output_file, bool bit, bool final)
         bitcount = byte = 0;
     }
 }
-void huffman::write_byte(ofstream &output_file, char byte)
+void huffman::write_byte(ostream &output_file, char byte)
 {
     for (int i = 0; i < NUM_BITS; i++)
     {
@@ -266,12 +266,12 @@ void huffman::write_byte(ofstream &output_file, char byte)
     }
 }
 
-bool huffman::verify_sign(ifstream &input_file)
+bool huffman::verify_sign(istream &input_file)
 {
     return read_byte(input_file) == SIGN;
 }
 
-void huffman::store_sign(ofstream &output_file)
+void huffman::store_sign(ostream &output_file)
 {
     write_byte(output_file, SIGN);
 }
