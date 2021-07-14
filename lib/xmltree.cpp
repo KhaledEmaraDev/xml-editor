@@ -301,7 +301,7 @@ void XMLTree::load(QTextStream &input)
 //    QTextStream ts(&file);
 
     QStringList list = tokenize(input);
-//    qDebug() << list.size();
+    qDebug() << list;
 
     // start loading the tree
     if(m_root) {
@@ -424,11 +424,12 @@ void XMLTree::load_helper(const QStringList& list,
             // ignore white spaces
             while(white_spaces.exactMatch(list[pos])) ++pos;
         }
-        // ignore the closing tag
-        ++pos;
 
 
-        if(list[pos - 1] == ">") {
+
+        if(list[pos] == ">") {
+            // ignore the closing tag
+            ++pos;
             // normal node
             node->m_selfclosing = false;
             // extract node value

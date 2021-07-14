@@ -108,6 +108,10 @@ bool MainWindow::checkSyntax()
         statusBar()->showMessage(tr(ex.c_str()));
 
         return false;
+    } catch (const QString &ex) {
+        statusBar()->showMessage(ex);
+
+        return false;
     } catch (...) {
         statusBar()->showMessage(tr("An unexpected error occurred"));
 
@@ -129,6 +133,8 @@ void MainWindow::minify()
             statusBar()->showMessage(tr(ex.what()));
         } catch (const std::string &ex) {
             statusBar()->showMessage(tr(ex.c_str()));
+        } catch (const QString &ex) {
+             statusBar()->showMessage(ex);
         } catch (...) {
             statusBar()->showMessage(tr("An unexpected error occurred"));
         }
@@ -149,7 +155,9 @@ void MainWindow::prettify()
             statusBar()->showMessage(tr(ex.what()));
         } catch (const std::string &ex) {
             statusBar()->showMessage(tr(ex.c_str()));
-        } catch (...) {
+        } catch (const QString &ex) {
+            statusBar()->showMessage(ex);
+       } catch (...) {
             statusBar()->showMessage(tr("An unexpected error occurred"));
         }
     }
