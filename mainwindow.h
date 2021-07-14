@@ -9,6 +9,7 @@
 QT_BEGIN_NAMESPACE
 class QAction;
 class QMenu;
+class QPlainTextEdit;
 class QSessionManager;
 QT_END_NAMESPACE
 
@@ -19,14 +20,17 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = 0);
 
+    void loadFile(const QString &fileName);
+
 protected:
     void closeEvent(QCloseEvent *event) override;
 
-public slots:
-    void about();
+private slots:
     void newFile();
-    void openFile(const QString &path = QString());
-    bool saveFile(const QString &path = QString());
+    void open();
+    bool save();
+    bool saveAs();
+    void about();
     bool checkSyntax();
     void minify();
     void prettify();
@@ -37,13 +41,15 @@ public slots:
 
 private:
     void setupEditor();
-    void setupFileMenu();
-    void setupToolBar();
-    void setupHelpMenu();
+    void setupActions();
+    void setupStatusBar();
     bool maybeSave();
+    bool saveFile(const QString &fileName);
+    void setCurrentFile(const QString &fileName);
 
     CodeEditor *editor;
     Highlighter *highlighter;
+    QString curFile;
 };
 
 #endif // MAINWINDOW_H

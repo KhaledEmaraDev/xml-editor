@@ -16,7 +16,7 @@ Highlighter::Highlighter(QTextDocument *parent)
     commentFormat.setForeground(Qt::red);
 
     valueFormat.setForeground(Qt::darkGreen);
-    rule.pattern = QRegularExpression(QStringLiteral("\".*\""));
+    rule.pattern = QRegularExpression(QStringLiteral("\"[^\"]*\""));
     rule.format = valueFormat;
     highlightingRules.append(rule);
 
