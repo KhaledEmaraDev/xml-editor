@@ -153,7 +153,7 @@ HashMap<char, string> huffman::generate_codes(HNode *root)
 uint64_t huffman::file_size(vector<int>& freqs, HashMap<char, string> &codes)
 {
     uint64_t fsize = 0;
-    for (int i = 0; i < freqs.size(); i++) {
+    for (uint64_t i = 0; i < freqs.size(); i++) {
         fsize += freqs[i] * codes[(char)i].length();
     }
     fsize += 10 * codes.size() -1;

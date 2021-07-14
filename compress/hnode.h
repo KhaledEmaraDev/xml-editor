@@ -31,6 +31,9 @@ public:
         // do nothing
     }
 
+    /**
+     * Destructor
+     */
     ~HNode()
     {
         delete m_left;

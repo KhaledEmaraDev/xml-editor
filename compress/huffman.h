@@ -32,13 +32,12 @@ class huffman
 public:
     /**
      * Default constructor
-     * calling reader() is required before
-     * encoding or decoding
      */
     huffman();
 
     /**
-     * compress the input file to output_file
+     * @brief encode
+     *        compress the input file to output_file
      * @param input_file  an opend file with binary read permissions
      * @param output_file an opend file with binary write permissions
      *
@@ -47,7 +46,8 @@ public:
     float encode(ifstream &input_file, ofstream &output_file);
 
     /**
-     * decompress the input file to output_file
+     * @brief decode
+     *        decompress the input file to output_file
      * @param input_file  an opend file with binary read permissions
      * @param output_file an opend file with binary write permissions
      */
@@ -56,7 +56,7 @@ public:
 private:
     /**
      * read bit from input stream
-     * store internal buffer to hold the information unit
+     * store internal buffer to hold the information unit(Byte)
      */
     bool read_bit(ifstream &input_file, bool final = 0);
 
@@ -68,8 +68,8 @@ private:
 
     /**
      * write bit to output stream
-     * store internal buffer to hold the information unit
-     * @param final write the stored buffer
+     * store internal buffer to hold the information unit(Byte)
+     * @param final write to the stored buffer
      */
     void write_bit(ofstream &output_file, bool bit, bool final = 0);
 
@@ -86,6 +86,8 @@ private:
 
     /**
      * verify signature of the file
+     * signature is used to make sure the file has been
+     * compresed with the same program
      */
     bool verify_sign(ifstream &input_file);
 
@@ -100,42 +102,44 @@ private:
     void store_tree(ofstream &output_file, HNode *root);
 
     /**
-     * calculate file size
+     * calculate the comprssed file size based on codes and their freqs
      */
     uint64_t file_size(vector<int>& freqs, HashMap<char, string> &codes);
 
     /**
-     * encode text base of the given charcter map
+     * encode text based on the given charcter map
      */
     void encode_file(ofstream &output_file, HashMap<char, string> &codes);
 
     /**
-     * decode text base of the given huffman tree
+     * decode text based on the given huffman tree
      */
     void decode_file(ifstream &input_file, ofstream &output_file, HNode *root);
 
     /**
      * read huffman tree from encoded data
+     * it must be prececed by verify sign
      */
     HNode *read_tree(ifstream &input_file);
 
     /**
-     * compute the frequencies of the charcters
+     * compute the frequencies of the charcters on the text
      */
     vector<int> compute_freqs();
 
     /**
-     * generate huffman tree
+     * generate huffman tree based on the frequency of the charcters
      */
     HNode *generate_tree(vector<int>& freqs);
 
     /**
-     * generate huffman codes
+     * generate huffman codes based on huffman tree
      */
     HashMap<char, string> generate_codes(HNode *root);
 
     /**
-     * to save the content of the file
+     * to temporary save the content of the file
+     *
      */
     string text;
 };
