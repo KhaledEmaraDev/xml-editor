@@ -1,10 +1,15 @@
 #include <QtWidgets>
 #include <QTextStream>
-#include <QDebug>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 #include "mainwindow.h"
 
 #include "lib/xmltree.h"
+#include "compress/huffman.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -47,7 +52,11 @@ void MainWindow::newFile()
 void MainWindow::open()
 {
     if (maybeSave()) {
-        QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "../xml-editor/samples/", "XML files (*.xml)");
+        QString fileName = QFileDialog::getOpenFileName(this,
+                                                        tr("Open File"),
+                                                        "../xml-editor/samples/",
+                                                        "XML files (*.xml);;Compressed XML files (*.hxml)"
+                                                       );
         if (!fileName.isEmpty())
             loadFile(fileName);
     }
@@ -64,7 +73,11 @@ bool MainWindow::save()
 
 bool MainWindow::saveAs()
 {
-    QFileDialog dialog(this, tr("Save File As"), "../xml-editor/samples/", "XML files (*.xml)");
+    QFileDialog dialog(this,
+                       tr("Save File As"),
+                       "../xml-editor/samples/",
+                       "XML files (*.xml);;Compressed XML files (*.hxml)"
+                      );
     dialog.setWindowModality(Qt::WindowModal);
     dialog.setAcceptMode(QFileDialog::AcceptSave);
     if (dialog.exec() != QDialog::Accepted)
@@ -90,33 +103,38 @@ bool MainWindow::checkSyntax()
 
     QString str = editor->toPlainText();
     QTextStream in(&str, QIODevice::ReadOnly);
+#ifndef QT_NO_CURSOR
+    QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+#endif
     try {
         XMLTree::syntax_check(in);
 
+#ifndef QT_NO_CURSOR
+        QGuiApplication::restoreOverrideCursor();
+#endif
+
         return true;
     } catch (const QVector<QPair<int, QString>> &ex) {
+        bool modified = editor->document()->isModified();
         for (const auto & error: ex) {
             editor->displayError(error.first, error.second);
         }
-
-        return false;
+        editor->document()->setModified(modified);
+        documentWasModified();
     } catch (const std::exception &ex) {
         statusBar()->showMessage(tr(ex.what()));
-
-        return false;
     } catch (const std::string &ex) {
         statusBar()->showMessage(tr(ex.c_str()));
-
-        return false;
     } catch (const QString &ex) {
         statusBar()->showMessage(ex);
-
-        return false;
     } catch (...) {
         statusBar()->showMessage(tr("An unexpected error occurred"));
-
-        return false;
     }
+#ifndef QT_NO_CURSOR
+    QGuiApplication::restoreOverrideCursor();
+#endif
+
+    return false;
 }
 
 void MainWindow::minify()
@@ -125,19 +143,26 @@ void MainWindow::minify()
     QTextStream in(&str, QIODevice::ReadOnly);
 
     if (checkSyntax()) {
+#ifndef QT_NO_CURSOR
+        QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+#endif
         try {
             XMLTree tree;
             tree.load(in);
             editor->setPlainText(tree.dump());
+            editor->document()->setModified(true);
         } catch (const std::exception &ex) {
             statusBar()->showMessage(tr(ex.what()));
         } catch (const std::string &ex) {
             statusBar()->showMessage(tr(ex.c_str()));
         } catch (const QString &ex) {
-             statusBar()->showMessage(ex);
+            statusBar()->showMessage(ex);
         } catch (...) {
             statusBar()->showMessage(tr("An unexpected error occurred"));
         }
+#ifndef QT_NO_CURSOR
+        QGuiApplication::restoreOverrideCursor();
+#endif
     }
 }
 
@@ -147,19 +172,26 @@ void MainWindow::prettify()
     QTextStream in(&str, QIODevice::ReadOnly);
 
     if (checkSyntax()) {
+#ifndef QT_NO_CURSOR
+        QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+#endif
         try {
             XMLTree tree;
             tree.load(in);
             editor->setPlainText(tree.dump(2));
+            editor->document()->setModified(true);
         } catch (const std::exception &ex) {
             statusBar()->showMessage(tr(ex.what()));
         } catch (const std::string &ex) {
             statusBar()->showMessage(tr(ex.c_str()));
         } catch (const QString &ex) {
             statusBar()->showMessage(ex);
-       } catch (...) {
+        } catch (...) {
             statusBar()->showMessage(tr("An unexpected error occurred"));
         }
+#ifndef QT_NO_CURSOR
+        QGuiApplication::restoreOverrideCursor();
+#endif
     }
 }
 
@@ -256,7 +288,7 @@ void MainWindow::setupActions()
     QMenu *codeMenu = menuBar()->addMenu(tr("&Code"));
     QToolBar *codeToolBar = addToolBar(tr("Code"));
 
-    const QIcon minifyIcon = QIcon::fromTheme("document-new", QIcon(":/images/new.png"));
+    const QIcon minifyIcon = QIcon(":/images/minify.png");
     QAction *minifyAct = new QAction(minifyIcon, tr("&Minify"), this);
     minifyAct->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_M));
     minifyAct->setStatusTip(tr("Minify XML File"));
@@ -264,7 +296,7 @@ void MainWindow::setupActions()
     codeMenu->addAction(minifyAct);
     codeToolBar->addAction(minifyAct);
 
-    const QIcon prettifyIcon = QIcon::fromTheme("document-open", QIcon(":/images/open.png"));
+    const QIcon prettifyIcon = QIcon(":/images/prettify.png");
     QAction *prettifyAct = new QAction(prettifyIcon, tr("&Prettify"), this);
     prettifyAct->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_P));
     prettifyAct->setStatusTip(tr("Prettify XML File"));
@@ -272,7 +304,7 @@ void MainWindow::setupActions()
     codeMenu->addAction(prettifyAct);
     codeToolBar->addAction(prettifyAct);
 
-    const QIcon checkSyntaxIcon = QIcon::fromTheme("document-save", QIcon(":/images/save.png"));
+    const QIcon checkSyntaxIcon = QIcon(":/images/check_syntax.png");
     QAction *checkSyntaxAct = new QAction(checkSyntaxIcon, tr("&Check Syntax"), this);
     checkSyntaxAct->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C));
     checkSyntaxAct->setStatusTip(tr("Check XML File Syntax"));
@@ -324,54 +356,102 @@ bool MainWindow::maybeSave()
 
 void MainWindow::loadFile(const QString &fileName)
 {
-    QFile file(fileName);
-    if (!file.open(QFile::ReadOnly | QFile::Text)) {
-        QMessageBox::warning(this, tr("Application"),
-                             tr("Cannot read file %1:\n%2.")
-                             .arg(QDir::toNativeSeparators(fileName), file.errorString()));
-        return;
-    }
+    QFileInfo fileInfo(fileName);
 
-    QTextStream in(&file);
+    if (fileInfo.suffix() == "xml") {
+        QFile file(fileName);
+        if (!file.open(QFile::ReadOnly | QFile::Text)) {
+            QMessageBox::warning(this, tr("Application"),
+                                 tr("Cannot read file %1:\n%2.")
+                                 .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+            return;
+        }
+
+        QTextStream in(&file);
 #ifndef QT_NO_CURSOR
-    QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+        QGuiApplication::setOverrideCursor(Qt::WaitCursor);
 #endif
-    editor->setPlainText(in.readAll());
+        editor->setPlainText(in.readAll());
 #ifndef QT_NO_CURSOR
-    QGuiApplication::restoreOverrideCursor();
+        QGuiApplication::restoreOverrideCursor();
 #endif
+    } else if (fileInfo.suffix() == "hxml") {
+        std::filebuf fb;
+        if (fb.open(fileName.toStdString(), std::ios_base::in | std::ios_base::binary)) {
+            std::istream is(&fb);
+
+            std::stringbuf sb;
+            std::ostream os(&sb);
+
+            huffman huff;
+            huff.decode(is, os);
+
+#ifndef QT_NO_CURSOR
+            QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+#endif
+            editor->setPlainText(QString::fromStdString(sb.str()));
+#ifndef QT_NO_CURSOR
+            QGuiApplication::restoreOverrideCursor();
+#endif
+
+            fb.close();
+        }
+    }
 
     setCurrentFile(fileName);
     statusBar()->showMessage(tr("File loaded"));
-
-    in.seek(0);
-    try {
-        XMLTree::syntax_check(in);
-    }  catch (const QVector<QPair<int, QString>> &ex) {
-        for (const auto & error: ex) {
-            editor->displayError(error.first, error.second);
-        }
-    }
+    checkSyntax();
 }
 
 bool MainWindow::saveFile(const QString &fileName)
 {
     QString errorMessage;
 
-    QGuiApplication::setOverrideCursor(Qt::WaitCursor);
-    QSaveFile file(fileName);
-    if (file.open(QFile::WriteOnly | QFile::Text)) {
-        QTextStream out(&file);
-        out << editor->toPlainText();
-        if (!file.commit()) {
-            errorMessage = tr("Cannot write file %1:\n%2.")
+    QFileInfo fileInfo(fileName);
+
+    if (fileInfo.suffix() == "xml") {
+        QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+
+        QSaveFile file(fileName);
+        if (file.open(QFile::WriteOnly | QFile::Text)) {
+            QTextStream out(&file);
+            editor->clearErrors();
+            out << editor->toPlainText();
+            if (!file.commit()) {
+                errorMessage = tr("Cannot write file %1:\n%2.")
+                        .arg(QDir::toNativeSeparators(fileName), file.errorString());
+            }
+        } else {
+            errorMessage = tr("Cannot open file %1 for writing:\n%2.")
                     .arg(QDir::toNativeSeparators(fileName), file.errorString());
         }
+
+        QGuiApplication::restoreOverrideCursor();
+    } else if (fileInfo.suffix() == "hxml") {
+        QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+
+        std::filebuf fb;
+        if (fb.open(fileName.toStdString(), std::ios_base::out | std::ios_base::binary)) {
+            editor->clearErrors();
+
+            std::ostream os(&fb);
+
+            std::stringbuf sb(editor->toPlainText().toStdString(), std::ios_base::in);
+            std::istream is(&sb);
+
+            huffman huff;
+            huff.encode(is, os);
+
+            fb.close();
+        } else {
+            errorMessage = tr("Cannot open file %1 for writing.")
+                    .arg(QDir::toNativeSeparators(fileName));
+        }
+
+        QGuiApplication::restoreOverrideCursor();
     } else {
-        errorMessage = tr("Cannot open file %1 for writing:\n%2.")
-                .arg(QDir::toNativeSeparators(fileName), file.errorString());
+        errorMessage = tr("Unkown file type");
     }
-    QGuiApplication::restoreOverrideCursor();
 
     if (!errorMessage.isEmpty()) {
         QMessageBox::warning(this, tr("Application"), errorMessage);

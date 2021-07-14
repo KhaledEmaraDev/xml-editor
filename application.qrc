@@ -6,6 +6,9 @@
     <file>images/open.png</file>
     <file>images/paste.png</file>
     <file>images/save.png</file>
+    <file>images/minify.png</file>
+    <file>images/prettify.png</file>
+    <file>images/check_syntax.png</file>
 </qresource>
 </RCC>
 
