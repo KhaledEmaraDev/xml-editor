@@ -16,9 +16,20 @@ CodeEditor::CodeEditor(QWidget *parent) : QPlainTextEdit(parent)
     highlightCurrentLine();
 }
 
-void CodeEditor::displayError(int line, const QString &msg) {
-    QTextCursor errorCursor(document()->findBlockByLineNumber(line - 1));
+void CodeEditor::displayError(int pos, const QString &msg) {
+    QTextCursor errorCursor(document()->findBlock(pos / 2));
     errorCursor.movePosition(QTextCursor::EndOfLine);
+
+    QTextCharFormat errorFormat;
+    errorFormat.setFontItalic(true);
+    errorFormat.setFontWeight(QFont::ExtraBold);
+    errorFormat.setForeground(Qt::red);
+    errorCursor.setCharFormat(errorFormat);
+
+    int originalPosition = errorCursor.position();
+    errorCursor.insertText(" Error: " + msg);
+    errorCursor.setPosition(originalPosition);
+    errorCursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
 
     QList<QTextEdit::ExtraSelection> extraSelections;
 
@@ -30,24 +41,18 @@ void CodeEditor::displayError(int line, const QString &msg) {
         selection.format.setBackground(lineColor);
         selection.format.setProperty(QTextFormat::FullWidthSelection, true);
         selection.cursor = errorCursor;
-        selection.cursor.clearSelection();
         errorSelections.append(selection);
     }
 
     extraSelections.append(currentLineSelection);
     extraSelections.append(errorSelections);
     setExtraSelections(extraSelections);
-
-    QTextCharFormat errorFormat;
-    errorFormat.setFontItalic(true);
-    errorFormat.setFontWeight(QFont::ExtraBold);
-    errorFormat.setForeground(Qt::red);
-    errorCursor.setCharFormat(errorFormat);
-
-    errorCursor.insertText(" Error: " + msg);
 }
 
 void CodeEditor::clearErrors() {
+    for (auto &selection: errorSelections) {
+        selection.cursor.removeSelectedText();
+    }
     errorSelections.clear();
 }
 
