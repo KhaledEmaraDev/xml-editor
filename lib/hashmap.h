@@ -8,22 +8,42 @@
 #include "lib/hashcode.h"
 
 template <typename key_t, typename value_t>
+/**
+ * @brief The HashMap class
+ *        All the operations has amortized constant time complexity
+ */
 class HashMap {
 
 public:
+    /**
+     * @brief The Cell struct
+     *  container for key/value and next/previous pointer
+     *  to reduce the overhead of the linkedlist
+     */
     struct Cell {
         MPair<key_t, value_t> data;
         Cell* next;
         Cell* previous;
 
+        /**
+          * Default constructor
+          */
         Cell() = default;
 
+        /**
+         * @brief Cell
+         *        construct Cell from MPair
+         */
         Cell(const MPair<key_t, value_t>& data)
             : data(data),
               next(nullptr),
               previous(nullptr)
         { /* do nothing */ }
 
+        /**
+         * @brief Cell
+         *        construct Cell from key/value
+         */
         Cell(const key_t& key, const value_t& value)
             : data(key, value),
               next(nullptr),
@@ -32,9 +52,13 @@ public:
     };
 
 public:
+    /**
+     * @brief The iterator class
+     *        Internal iterator class to loop over the HashMap
+     */
     class iterator:
             public std::iterator<std::input_iterator_tag,
-            MPair<key_t, value_t>>
+                                 MPair<key_t, value_t>>
     {
     private:
         const HashMap* mp;
@@ -42,12 +66,26 @@ public:
         Cell* cp;
 
     public:
+        /**
+          *  Default constructor
+          *  it's deleted as it needs a HashMap to iterate on
+          */
         iterator() = default;
 
-        iterator(const HashMap* mp, int bucket,Cell* cp)
+        /**
+         * @brief iterator
+         *        construct iterator with prespecified postion
+         *        usefull for HashMap internal functions
+         */
+        iterator(const HashMap* mp, int bucket, Cell* cp)
             : mp(mp), bucket(bucket), cp(cp)
         { /* do nothing */ }
 
+        /**
+         * @brief iterator
+         *        construct iterator in the begining or the end
+         *        of the HashMap
+         */
         iterator(const HashMap* mp, bool end)
         {
             this->mp = mp;
@@ -62,6 +100,10 @@ public:
                 }
             }
         }
+
+        /**
+         * @brief prefix operator ++
+         */
         iterator& operator++() {
             cp = cp->next;
             while (!cp && ++bucket < mp->buckets.size()) {
@@ -70,69 +112,212 @@ public:
             return *this;
         }
 
+        /**
+         * @brief postfix operator ++
+         */
         iterator operator++(int) {
             iterator copy(*this);
             operator++();
             return copy;
         }
 
+        /**
+         * @brief operator *
+         * @return refernce to the key/value
+         */
         MPair<key_t, value_t>& operator*() {
             return cp->data;
         }
 
+        /**
+         * @brief operator ->
+         * @return pointer to the key/value
+         */
         MPair<key_t, value_t>* operator->() {
             return &(cp->data);
         }
+
+        /**
+         * @brief operator ==
+         * TODO: check for version updates
+         */
         bool operator ==(const iterator& it) {
             return mp == it.mp && bucket == it.bucket && cp == it.cp;
         }
 
+        /**
+         * @brief operator !=
+         * TODO: check for version updates
+         */
         bool operator !=(const iterator& it) {
             return mp != it.mp || bucket != it.bucket || cp != it.cp;
         }
     };
 
+    /**
+     * @brief begin
+     * @return iterator to the first element on HashMap
+     */
     iterator begin() const {
         return iterator(this, false);
     }
 
+    /**
+     * @brief end
+     * @return iterator to the element behind the last element
+     *         on the HashMap
+     */
     iterator end() const {
         return iterator(this, true);
     }
 
 public:
+    /**
+     * @brief HashMap
+     *        Default constructor
+     */
     HashMap();
+
+    /**
+     * @brief HashMap
+     *        copy constructor
+     */
     HashMap(const HashMap& src);
+
+    /**
+     * @brief HashMap
+     *        move constructor
+     */
     HashMap(HashMap&& src);
+
+    /**
+      * Destructor
+      */
     ~HashMap();
 
+    /**
+     * @brief size
+     * @return number of elements in the map
+     */
     int size() const { return num_cells; }
+
+    /**
+     * @brief operator =
+     *        copy assigment operator
+     * @return reference to allow chaining
+     */
     HashMap& operator=(const HashMap& src);
+
+    /**
+     * @brief operator =
+     *        move assigment operator
+     * @return reference to allow chaining
+     */
     HashMap& operator=(HashMap&& src);
 
-
+    /**
+     * @brief insert
+     *        insert new item in the map
+     *        if the key is present in the map
+     *        it returns and update nothing
+     */
     void insert(const MPair<key_t, value_t>& item);
+
+    /**
+     * @brief insert
+     *        overload insert function for seperated
+     *        key and value
+     */
     void insert(const key_t& key, const value_t& vaule);
 
+    /**
+     * @brief get
+     * @return the value for the specfied key
+     *         the default value if the key is not present
+     */
     const value_t& get(const key_t& key) const;
+
+    /**
+     * @brief contains
+     * @return true if the key is present in the map
+     *         false otherwise
+     */
     bool contains(const key_t& key) const;
+
+    /**
+     * @brief find
+     * @return iterator points to the location for the specfied key
+     *         end() if the key is not present
+     */
     iterator find(const key_t& key) const;
 
+    /**
+     * @brief operator []
+     *        same as get() but return reference to the value
+     */
     const value_t& operator[](const key_t& key) const;
+
+    /**
+     * @brief operator []
+     *        if the key is present in the map
+     *        it returns a reference to the value
+     *        otherwise inserts a new item with the defaut value
+     */
     value_t& operator[](const key_t& key);
 
+    /**
+     * @brief clear
+     *        remove all the elements in the map
+     */
     void clear();
+
+    /**
+     * @brief remove
+     * @param key
+     */
     void remove(const key_t& key);
 
     template <typename T, typename U>
+    /**
+     * @brief operator <<
+     * @param dbg
+     * @param mp
+     * @return
+     */
     friend QDebug operator<<(QDebug dbg, const HashMap<T, U> &mp);
 
 private:
+    /**
+     * @brief insert_cell
+     *        insert_cell in the right buckets
+     */
     void insert_cell(Cell* cell);
 
+    /**
+     * @brief find_cell
+     * @return pointer to the cell with the specfied key
+     *         null if the key is not present is the map
+     */
     Cell* find_cell(const key_t& key, int index) const;
+
+    /**
+     * @brief delete_buckets
+     *        delete the elements in the given map
+     */
     void delete_buckets(QVector<Cell*>& buckets) const;
+
+    /**
+     * @brief deep_copy
+     *        deep copy for all the elements in the map
+     */
     void deep_copy(const HashMap<key_t, value_t>& src);
+
+    /**
+     * @brief rehash
+     *        if the load factor is bigger than MAX_LOAD_FACTOR
+     *        it doubles the internal vector size and rehash all the elements
+     *        to achive the amortized constant complexity
+     */
     void rehash();
 
 private:
