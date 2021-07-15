@@ -24,8 +24,7 @@ QString XMLTree::dump(int spaces) const
     QTextStream ts(&builder);
 
     dump_helper(m_root, spaces, 0, ts);
-//    while(!ts.atEnd())
-//        qDebug().noquote().nospace() << ts.readLine();
+
     return builder;
 
 }
@@ -116,17 +115,8 @@ XMLNode *XMLTree::root() const
 
 int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 {
-    //    QFile file("../xml-editor/data/data-so-sample.xml");
-    //    file.open(QFile::ReadOnly);
-    //    QTextStream ts(&file);
-
-
-
     // extract the captured groups
     QStringList list = tokenize(input);
-
-    //    qDebug() << list.size();
-        qDebug() << list;
 
     // regex to match white spaces
     QRegExp white_spaces("[\\s]+");
@@ -146,10 +136,8 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 
     auto ignore_white_spaces = [&list, &pos, &white_spaces, &index]() {
         while(++pos < list.size() &&
-              white_spaces.exactMatch(list[pos])) {
-            qDebug() << pos << list[pos];
+              white_spaces.exactMatch(list[pos]))
             index += list[pos].count('\n');
-        }
     };
 
     while(pos < list.size()) {
@@ -160,7 +148,6 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
               list[pos] != ">" &&
               list[pos] != "/>"*/)
         {
-//            index += list[pos].length();
             ignore_white_spaces();
         }
 
@@ -169,7 +156,6 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 
         if(list[pos] == ">" || list[pos] == "/>") {
             throw_error("Didn'r expected " + list[pos]);
-//            index += list[pos].length();
             ignore_white_spaces();
             continue;
 
@@ -177,7 +163,6 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 
         // closing tag
         if(list[pos] == "</") {
-//            index += list[pos].length();
             ignore_white_spaces();
 
             if(pos == list.size()) {
@@ -197,7 +182,6 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
             } else {
                 stack.pop();
             }
-//            index += list[pos].length();
             continue;
         }
 
@@ -239,16 +223,15 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
             else
                 attributes[list[pos]];
 
-//            index += list[pos].length();
             ignore_white_spaces();
 
             if(pos == list.size()) {
                 throw_error("Expected > or />");
                 break;
             }
+
             if(list[pos] != "=")
                 throw_error("Expected =");
-//            index += list[pos].length();
 
             if(list[pos] == ">" || list[pos] == "/>")
                 break;
@@ -276,7 +259,6 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
             else
                 throw_error("Didn't expect />");
         }
-//        index += list[pos].length();
         ignore_white_spaces();
 
 
@@ -304,14 +286,8 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 
 void XMLTree::load(QTextStream &input)
 {
-//    QFile file("../xml-editor/data/data-so-sample.xml");
-//    file.open(QFile::ReadOnly);
-//    QTextStream ts(&file);
-
     QStringList list = tokenize(input);
-//    qDebug() << list;
 
-    // start loading the tree
     if(m_root) {
         delete m_root;
         m_size = 0;
@@ -319,9 +295,7 @@ void XMLTree::load(QTextStream &input)
     m_root = new XMLNode;
     m_root->m_parent = nullptr;
     load_helper(list, 0, m_root);
-    //    dump(2);
-    //    dump(0);
-    //    dump();
+
 }
 
 void XMLTree::load_helper(const QStringList& list,

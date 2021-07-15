@@ -15,10 +15,11 @@ QString JSON::xml2json(const XMLTree &tree, int spaces)
         local_indent += " ";
 
     ts << "{\n" << local_indent << tree.root()->tag() << ": ";
+
     xml2json_helper(tree.root(), spaces, 1, ts);
+
     ts << "}";
-//    while(!ts.atEnd())
-//        qDebug().noquote().nospace() << ts.readLine();
+
     return builder;
 }
 

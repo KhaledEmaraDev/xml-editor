@@ -43,7 +43,7 @@ public:
      *
      * @return compression ratio
      *
-     * @complexity O(size)
+     * @complexity O(size of (input_file))
      */
     float encode(istream &input_file, ostream &output_file);
 
@@ -52,6 +52,8 @@ public:
      *        decompress the input file to output_file
      * @param input_file  an opend file with binary read permissions
      * @param output_file an opend file with binary write permissions
+     *
+     * @complexity O(size of (input_file))
      */
     void decode(istream &input_file, ostream &output_file);
 

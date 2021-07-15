@@ -25,6 +25,7 @@ public:
      *         minifinying the XML removes all the uneeded
      *         spaces and newlines in the text including the
      *         values of the XML nodes
+     * @complexity O(sizeof(tree))
      */
     QString dump(int spaces = -1) const;
 
@@ -32,6 +33,7 @@ public:
      * @brief load
      *        load the XML Tree from input stream
      *        The XML must be syntactically correct
+     * @complexity O(length of(input))
      */
     void load(QTextStream& input);
 
@@ -47,6 +49,7 @@ public:
      *        the following errors may be more or different
      *        than expected
      * @return true if the
+     * @complexity O(length of(input))
      */
     static int syntax_check(QTextStream& input, bool capture_all = true);
 
@@ -54,12 +57,14 @@ public:
      * @brief is_token
      *        static function checks if the given token
      *        is a special XML token
+     * @complexity O(size of(token))
      */
     static bool is_token(const QString& token);
 
     /**
      * @brief size
      * @return number of XML Nodes
+     * @complexity O(1)
      */
     int size() const { return m_size;}
 
