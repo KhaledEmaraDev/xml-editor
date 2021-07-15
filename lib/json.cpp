@@ -16,14 +16,18 @@ QString JSON::xml2json(const XMLTree &tree, int spaces)
 
     ts << "{\n" << local_indent << tree.root()->tag() << ": ";
 
-    xml2json_helper(tree.root(), spaces, 1, ts);
+    xml2json_helper(tree.root(), spaces, 1, 0, ts);
 
     ts << "}";
 
     return builder;
 }
 
-void JSON::xml2json_helper(const XMLNode *node, int spaces, int depth, QTextStream &output)
+void JSON::xml2json_helper(const XMLNode *node,
+                           int spaces,
+                           int depth,
+                           bool array_parent,
+                           QTextStream &output)
 {
     if(node == nullptr)
         return;
@@ -47,8 +51,12 @@ void JSON::xml2json_helper(const XMLNode *node, int spaces, int depth, QTextStre
         end_line = "\n";
     }
 
+    QString value = node->value();
+    QRegExp comments("<!--[\\w\\W]+-->");
+    value.remove(comments);
     if(!node->attributes_size() && node->is_leaf()) {
-       output << "\"" << (node->value() == "" ? "null" : node->value()) <<  "\"\n";
+        if(array_parent) output << local_indent;
+        output << "\"" << (value == "" ? "null" : value) <<  "\",\n";
         return;
     }
 
@@ -71,19 +79,19 @@ void JSON::xml2json_helper(const XMLNode *node, int spaces, int depth, QTextStre
     for(const auto& group : children) {
         if(group.value.size() == 1) {
             output << indent << group.key << ": ";
-            xml2json_helper(group.value[0], spaces, depth + 1, output);
+            xml2json_helper(group.value[0], spaces, depth + 1, 0, output);
         } else {
             output << indent << group.key << ": [ \n";
             for(const auto& child : group.value) {
                 output << indent ;
-                xml2json_helper(child, spaces, depth + 1, output);
+                xml2json_helper(child, spaces, depth + 1, 1, output);
             }
             output << indent << "],\n";
         }
     }
 
-    if(node->value() != "")
-        output << indent << "@text: \"" << node->value() << "\"\n";
+    if(value != "")
+        output << indent << "@text: \"" << value << "\",\n";
 
     output << indent_less << "},\n";
 }

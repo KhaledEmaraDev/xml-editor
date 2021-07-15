@@ -11,22 +11,21 @@ requires(qtConfig(filedialog))
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    codeeditor.cpp \
     compress/huffman.cpp \
     lib/json.cpp \
 #    lib/jsonnode.cpp \
     lib/xmlnode.cpp \
     lib/xmltree.cpp \
-    main.cpp \
-    mainwidnow.cpp \
     test/compresstest.cpp \
     test/hashtest.cpp \
     test/xmltest.cpp \
-    xml_highlighter.cpp \
-    json_highlighter.cpp
+    ui/codeeditor.cpp \
+    ui/json_highlighter.cpp \
+    main.cpp \
+    ui/mainwidnow.cpp \
+    ui/xml_highlighter.cpp
 
 HEADERS += \
-    codeeditor.h \
     compress/huffman.h \
     compress/hnode.h \
     lib/hashcode.h \
@@ -36,9 +35,10 @@ HEADERS += \
     lib/mpair.h \
     lib/xmlnode.h \
     lib/xmltree.h \
-    mainwindow.h \
-    xml_highlighter.h \
-    json_highlighter.h
+    ui/codeeditor.h \
+    ui/json_highlighter.h \
+    ui/mainwindow.h \
+    ui/xml_highlighter.h
 
 RESOURCES = application.qrc
 
