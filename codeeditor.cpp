@@ -17,7 +17,7 @@ CodeEditor::CodeEditor(QWidget *parent) : QPlainTextEdit(parent)
 }
 
 void CodeEditor::displayError(int pos, const QString &msg) {
-    QTextCursor errorCursor(document()->findBlock(pos / 2));
+    QTextCursor errorCursor(document()->findBlockByLineNumber(pos));
     errorCursor.movePosition(QTextCursor::EndOfLine);
 
     QTextCharFormat errorFormat;

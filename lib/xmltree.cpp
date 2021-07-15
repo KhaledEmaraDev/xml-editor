@@ -126,7 +126,7 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
     QStringList list = tokenize(input);
 
     //    qDebug() << list.size();
-    //    qDebug() << list;
+        qDebug() << list;
 
     // regex to match white spaces
     QRegExp white_spaces("[\\s]+");
@@ -146,8 +146,10 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 
     auto ignore_white_spaces = [&list, &pos, &white_spaces, &index]() {
         while(++pos < list.size() &&
-              white_spaces.exactMatch(list[pos]))
-            index += list[pos].length();
+              white_spaces.exactMatch(list[pos])) {
+            qDebug() << pos << list[pos];
+            index += list[pos].count('\n');
+        }
     };
 
     while(pos < list.size()) {
@@ -158,8 +160,8 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
               list[pos] != ">" &&
               list[pos] != "/>"*/)
         {
-            index += list[pos].length();
-            pos++;
+//            index += list[pos].length();
+            ignore_white_spaces();
         }
 
         if(pos == list.size())
@@ -167,15 +169,15 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 
         if(list[pos] == ">" || list[pos] == "/>") {
             throw_error("Didn'r expected " + list[pos]);
-            index += list[pos].length();
-            pos++;
+//            index += list[pos].length();
+            ignore_white_spaces();
             continue;
 
         }
 
         // closing tag
         if(list[pos] == "</") {
-            index += list[pos].length();
+//            index += list[pos].length();
             ignore_white_spaces();
 
             if(pos == list.size()) {
@@ -185,16 +187,17 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 
             if(is_token(list[pos])) {
                 throw_error("Expected tag name");
-                pos++;
+                ignore_white_spaces();
                 continue;
             }
 
-            if(!(stack.size() && stack.top() ==  list[pos]))
+            if(!(stack.size() && stack.top() ==  list[pos])) {
                 throw_error( stack.size() ? "Mismatched tages: Expected " + stack.top()
                                           : "Closing tag without matched opening tag");
-            if(stack.size())
+            } else {
                 stack.pop();
-            index += list[pos].length();
+            }
+//            index += list[pos].length();
             continue;
         }
 
@@ -208,7 +211,7 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 
         if(is_token(list[pos])) {
             throw_error("Expected tag name");
-            pos++;
+            ignore_white_spaces();
             continue;
         }
 
@@ -227,7 +230,7 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
 
             if(is_token(list[pos])) {
                 throw_error("Didn't expect \"" + list[pos] +"\"");
-                pos++;
+                ignore_white_spaces();
                 continue;
             }
 
@@ -236,7 +239,7 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
             else
                 attributes[list[pos]];
 
-            index += list[pos].length();
+//            index += list[pos].length();
             ignore_white_spaces();
 
             if(pos == list.size()) {
@@ -245,7 +248,7 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
             }
             if(list[pos] != "=")
                 throw_error("Expected =");
-            index += list[pos].length();
+//            index += list[pos].length();
 
             if(list[pos] == ">" || list[pos] == "/>")
                 break;
@@ -273,8 +276,8 @@ int XMLTree::syntax_check(QTextStream &input, bool capture_all)
             else
                 throw_error("Didn't expect />");
         }
-        index += list[pos].length();
-        pos++;
+//        index += list[pos].length();
+        ignore_white_spaces();
 
 
     }
