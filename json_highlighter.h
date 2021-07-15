@@ -27,8 +27,7 @@ private:
     };
     QVector<HighlightingRule> highlightingRules;
 
-    QTextCharFormat tagFormat;
-    QTextCharFormat commentFormat;
+    QTextCharFormat bracketFormat;
     QTextCharFormat valueFormat;
     QTextCharFormat keyFormat;
 };

@@ -5,15 +5,13 @@ JsonHighlighter::JsonHighlighter(QTextDocument *parent)
 {
     HighlightingRule rule;
 
-    tagFormat.setForeground(Qt::darkBlue);
-    tagFormat.setFontWeight(QFont::Bold);
-    rule.format = tagFormat;
+    bracketFormat.setForeground(Qt::darkBlue);
+    bracketFormat.setFontWeight(QFont::Bold);
+    rule.format = bracketFormat;
     rule.pattern = QRegularExpression(QStringLiteral("[{}\\[\\],]"));
     highlightingRules.append(rule);
     rule.pattern = QRegularExpression(QStringLiteral("[/\\?]?>"));
     highlightingRules.append(rule);
-
-    commentFormat.setForeground(Qt::red);
 
     valueFormat.setForeground(Qt::darkGreen);
     rule.pattern = QRegularExpression(QStringLiteral("\"[^\"]*\""));
