@@ -22,7 +22,7 @@ public:
      * @return the XML Tree with the proper indentation
      *         as specfied with the number of spaces
      *         negative value means minifinying the XML
-     *         minifinying the XML removes all the uneeded
+     *         Minifying the XML removes all the unneeded
      *         spaces and newlines in the text including the
      *         values of the XML nodes
      * @complexity O(sizeof(tree))
@@ -39,16 +39,16 @@ public:
 
     /**
      * @brief syntax_check
-     *        checks if the XML syntactically correct
+     *        checks if the XML is syntactically correct
      *        it loops through the list of tokens checks
-     *        if its order subjet to the rules of the XML
+     *        if its order subject to the rules of the XML
      *        it throws MPair{error_index, error_description}
      * @param capture_all
-     *        if specfied if will throws QVector<MPair>
-     *        of all encounterd errors in the document
+     *        if specfied it will throw QVector<MPair>
+     *        of all encountered errors in the document
      *        the following errors may be more or different
      *        than expected
-     * @return true if the
+     * @return true if the XML is syntactically correct
      * @complexity O(length of(input))
      */
     static int syntax_check(QTextStream& input, bool capture_all = true);
@@ -75,16 +75,17 @@ private:
      * @brief load_helper
      *        load the xml tree to the given XML parent
      *        it operates on single parent node
-     *        it can detect selfcloing nodes
-     *        it ignores the meta data of xml
+     *        it can detect self-closing nodes
+     *        it ignores the meta data of xml as they are
+     *        not part of the xml document
      *        it operates on syntactically correct XML
      *        with light error checking for the attribute list
      *
      *        it simply loop through the list of tokens
-     *        if it encouterd an openning tag
+     *        if it encountered an opening tag
      *        it will add this node as a child of the current node
      *        else it will add it as a sibling for this node
-     *        if it encouterd a second closing tag it will return to
+     *        if it encountered a second closing tag it will return to
      *        the parent of the current node
      *
      * @param list QStringList of tokens generated from tokenize function

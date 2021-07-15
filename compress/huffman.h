@@ -140,13 +140,13 @@ private:
     HNode *read_tree(istream &input_file);
 
     /**
-     * compute the frequencies of the charcters on the text
+     * compute the frequencies of the characters on the text
      * @complexity O(sizeof(input_file))
      */
     vector<int> compute_freqs();
 
     /**
-     * generate huffman tree based on the frequency of the charcters
+     * generate huffman tree based on the frequency of the characters
      * @complexity O(sizeof(freqs) * log(sizeof(freqs)))
      *  O(1) as the max size of freqs is 265
      */

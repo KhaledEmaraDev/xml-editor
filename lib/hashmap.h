@@ -246,7 +246,7 @@ public:
 
     /**
      * @brief find
-     * @return iterator points to the location for the specfied key
+     * @return iterator points to the location for the specified key
      *         end() if the key is not present
      */
     iterator find(const key_t& key) const;
