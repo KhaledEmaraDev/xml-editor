@@ -14,7 +14,8 @@ QString JSON::xml2json(const XMLTree &tree, int spaces)
     for(int i = 0; i < spaces; i++)
         local_indent += " ";
 
-    ts << "{\n" << local_indent << tree.root()->tag() << ": ";
+    ts << "{" << (spaces >= 0 ? "\n" : "" ) << local_indent
+       << tree.root()->tag() << ":" << (spaces >= 0 ? " " : "" );
 
     xml2json_helper(tree.root(), spaces, 1, 0, ts);
 
@@ -32,6 +33,7 @@ void JSON::xml2json_helper(const XMLNode *node,
     if(node == nullptr)
         return;
 
+    QString space;
     QString indent;
     QString end_line;
     QString indent_less;
@@ -48,23 +50,27 @@ void JSON::xml2json_helper(const XMLNode *node,
             indent_less += local_indent;
 
         indent = indent_less + local_indent;
+        space = " ";
         end_line = "\n";
     }
 
     QString value = node->value();
     QRegExp comments("<!--[\\w\\W]+-->");
     value.remove(comments);
+    if(spaces < 0)
+        value = value.simplified();
+
     if(!node->attributes_size() && node->is_leaf()) {
         if(array_parent) output << local_indent;
-        output << "\"" << (value == "" ? "null" : value) <<  "\",\n";
+        output << "\"" << (value == "" ? "null" : value) <<  "\"," << end_line;
         return;
     }
 
-    output << "{\n";
+    output << "{" << end_line;
 
     for(const auto& item : node->attributes()) {
-        output << indent  << "#" << item.key << ": "
-                 << item.value << ",\n";
+        output << indent  << "#" << item.key << ":" << space
+                 << item.value << "," << end_line;
     }
 
     HashMap<QString, QList<XMLNode *>> children;
@@ -78,20 +84,20 @@ void JSON::xml2json_helper(const XMLNode *node,
 
     for(const auto& group : children) {
         if(group.value.size() == 1) {
-            output << indent << group.key << ": ";
+            output << indent << group.key << ":" << space;
             xml2json_helper(group.value[0], spaces, depth + 1, 0, output);
         } else {
-            output << indent << group.key << ": [ \n";
+            output << indent << group.key << ":" << space << "[" << end_line;
             for(const auto& child : group.value) {
                 output << indent ;
                 xml2json_helper(child, spaces, depth + 1, 1, output);
             }
-            output << indent << "],\n";
+            output << indent << "]," << end_line;
         }
     }
 
     if(value != "")
-        output << indent << "@text: \"" << value << "\",\n";
+        output << indent << "@text:" << space << "\"" << value << "\"," << end_line;
 
-    output << indent_less << "},\n";
+    output << indent_less << "}," << end_line;
 }
