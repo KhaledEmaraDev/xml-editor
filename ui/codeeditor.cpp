@@ -16,8 +16,8 @@ CodeEditor::CodeEditor(QWidget *parent) : QPlainTextEdit(parent)
     highlightCurrentLine();
 }
 
-void CodeEditor::displayError(int pos, const QString &msg) {
-    QTextCursor errorCursor(document()->findBlockByLineNumber(pos));
+void CodeEditor::displayError(int line, const QString &msg) {
+    QTextCursor errorCursor(document()->findBlockByLineNumber(line / 2));
     errorCursor.movePosition(QTextCursor::EndOfLine);
 
     QTextCharFormat errorFormat;

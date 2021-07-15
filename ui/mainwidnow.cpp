@@ -150,8 +150,16 @@ void MainWindow::minify()
         try {
             XMLTree tree;
             tree.load(in);
-            xmlEditor->setPlainText(tree.dump());
-            xmlEditor->document()->setModified(true);
+
+            switch(tabber->currentIndex()) {
+            case 0:
+                xmlEditor->setPlainText(tree.dump());
+                xmlEditor->document()->setModified(true);
+                break;
+            case 1:
+                jsonEditor->setPlainText(JSON::xml2json(tree));
+                break;
+            }
         } catch (const std::exception &ex) {
             statusBar()->showMessage(tr(ex.what()));
         } catch (const std::string &ex) {
@@ -179,8 +187,16 @@ void MainWindow::prettify()
         try {
             XMLTree tree;
             tree.load(in);
-            xmlEditor->setPlainText(tree.dump(2));
-            xmlEditor->document()->setModified(true);
+
+            switch(tabber->currentIndex()) {
+            case 0:
+                xmlEditor->setPlainText(tree.dump(2));
+                xmlEditor->document()->setModified(true);
+                break;
+            case 1:
+                jsonEditor->setPlainText(JSON::xml2json(tree, 2));
+                break;
+            }
         } catch (const std::exception &ex) {
             statusBar()->showMessage(tr(ex.what()));
         } catch (const std::string &ex) {
