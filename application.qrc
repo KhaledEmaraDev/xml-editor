@@ -9,6 +9,7 @@
     <file>images/minify.png</file>
     <file>images/prettify.png</file>
     <file>images/check_syntax.png</file>
+    <file>images/convert_to_json.png</file>
 </qresource>
 </RCC>
 

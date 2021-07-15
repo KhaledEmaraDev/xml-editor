@@ -9,13 +9,14 @@
 #include "mainwindow.h"
 
 #include "lib/xmltree.h"
+#include "lib/json.h"
 #include "compress/huffman.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     setupEditor();
-    setCentralWidget(editor);
+    setCentralWidget(tabber);
 
     setupActions();
     setupStatusBar();
@@ -44,7 +45,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::newFile()
 {
     if (maybeSave()) {
-        editor->clear();
+        xmlEditor->clear();
         setCurrentFile(QString());
     }
 }
@@ -94,14 +95,14 @@ void MainWindow::about()
 
 void MainWindow::documentWasModified()
 {
-    setWindowModified(editor->document()->isModified());
+    setWindowModified(xmlEditor->document()->isModified());
 }
 
 bool MainWindow::checkSyntax()
 {
-    editor->clearErrors();
+    xmlEditor->clearErrors();
 
-    QString str = editor->toPlainText();
+    QString str = xmlEditor->toPlainText();
     QTextStream in(&str, QIODevice::ReadOnly);
 #ifndef QT_NO_CURSOR
     QGuiApplication::setOverrideCursor(Qt::WaitCursor);
@@ -115,11 +116,11 @@ bool MainWindow::checkSyntax()
 
         return true;
     } catch (const QVector<QPair<int, QString>> &ex) {
-        bool modified = editor->document()->isModified();
+        bool modified = xmlEditor->document()->isModified();
         for (const auto & error: ex) {
-            editor->displayError(error.first, error.second);
+            xmlEditor->displayError(error.first, error.second);
         }
-        editor->document()->setModified(modified);
+        xmlEditor->document()->setModified(modified);
         documentWasModified();
     } catch (const std::exception &ex) {
         statusBar()->showMessage(tr(ex.what()));
@@ -139,7 +140,7 @@ bool MainWindow::checkSyntax()
 
 void MainWindow::minify()
 {
-    QString str = editor->toPlainText();
+    QString str = xmlEditor->toPlainText();
     QTextStream in(&str, QIODevice::ReadOnly);
 
     if (checkSyntax()) {
@@ -149,8 +150,8 @@ void MainWindow::minify()
         try {
             XMLTree tree;
             tree.load(in);
-            editor->setPlainText(tree.dump());
-            editor->document()->setModified(true);
+            xmlEditor->setPlainText(tree.dump());
+            xmlEditor->document()->setModified(true);
         } catch (const std::exception &ex) {
             statusBar()->showMessage(tr(ex.what()));
         } catch (const std::string &ex) {
@@ -168,7 +169,7 @@ void MainWindow::minify()
 
 void MainWindow::prettify()
 {
-    QString str = editor->toPlainText();
+    QString str = xmlEditor->toPlainText();
     QTextStream in(&str, QIODevice::ReadOnly);
 
     if (checkSyntax()) {
@@ -178,8 +179,37 @@ void MainWindow::prettify()
         try {
             XMLTree tree;
             tree.load(in);
-            editor->setPlainText(tree.dump(2));
-            editor->document()->setModified(true);
+            xmlEditor->setPlainText(tree.dump(2));
+            xmlEditor->document()->setModified(true);
+        } catch (const std::exception &ex) {
+            statusBar()->showMessage(tr(ex.what()));
+        } catch (const std::string &ex) {
+            statusBar()->showMessage(tr(ex.c_str()));
+        } catch (const QString &ex) {
+            statusBar()->showMessage(ex);
+        } catch (...) {
+            statusBar()->showMessage(tr("An unexpected error occurred"));
+        }
+#ifndef QT_NO_CURSOR
+        QGuiApplication::restoreOverrideCursor();
+#endif
+    }
+}
+
+void MainWindow::convertToJson()
+{
+    QString str = xmlEditor->toPlainText();
+    QTextStream in(&str, QIODevice::ReadOnly);
+
+    if (checkSyntax()) {
+#ifndef QT_NO_CURSOR
+        QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+#endif
+        try {
+            XMLTree tree;
+            tree.load(in);
+            jsonEditor->setPlainText(JSON::xml2json(tree, 2));
+            tabber->setCurrentIndex(1);
         } catch (const std::exception &ex) {
             statusBar()->showMessage(tr(ex.what()));
         } catch (const std::string &ex) {
@@ -202,13 +232,22 @@ void MainWindow::setupEditor()
     font.setFixedPitch(true);
     font.setPointSize(10);
 
-    editor = new CodeEditor;
-    editor->setFont(font);
+    xmlEditor = new CodeEditor;
+    xmlEditor->setFont(font);
 
-    highlighter = new Highlighter(editor->document());
+    xmlHighlighter = new XmlHighlighter(xmlEditor->document());
 
-    connect(editor->document(), &QTextDocument::contentsChanged,
+    connect(xmlEditor->document(), &QTextDocument::contentsChanged,
             this, &MainWindow::documentWasModified);
+
+    jsonEditor = new CodeEditor;
+    jsonEditor->setFont(font);
+
+    jsonHighlighter = new JsonHighlighter(jsonEditor->document());
+
+    tabber = new QTabWidget(this);
+    tabber->addTab(xmlEditor, "XML File");
+    tabber->addTab(jsonEditor, "Json File");
 }
 
 void MainWindow::setupActions()
@@ -260,7 +299,7 @@ void MainWindow::setupActions()
     cutAct->setShortcuts(QKeySequence::Cut);
     cutAct->setStatusTip(tr("Cut the current selection's contents to the "
                                 "clipboard"));
-    connect(cutAct, &QAction::triggered, editor, &CodeEditor::cut);
+    connect(cutAct, &QAction::triggered, xmlEditor, &CodeEditor::cut);
     editMenu->addAction(cutAct);
     editToolBar->addAction(cutAct);
 
@@ -269,7 +308,7 @@ void MainWindow::setupActions()
     copyAct->setShortcuts(QKeySequence::Copy);
     copyAct->setStatusTip(tr("Copy the current selection's contents to the "
                                  "clipboard"));
-    connect(copyAct, &QAction::triggered, editor, &CodeEditor::copy);
+    connect(copyAct, &QAction::triggered, xmlEditor, &CodeEditor::copy);
     editMenu->addAction(copyAct);
     editToolBar->addAction(copyAct);
 
@@ -278,7 +317,7 @@ void MainWindow::setupActions()
     pasteAct->setShortcuts(QKeySequence::Paste);
     pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
                                   "selection"));
-    connect(pasteAct, &QAction::triggered, editor, &CodeEditor::paste);
+    connect(pasteAct, &QAction::triggered, xmlEditor, &CodeEditor::paste);
     editMenu->addAction(pasteAct);
     editToolBar->addAction(pasteAct);
 
@@ -312,6 +351,14 @@ void MainWindow::setupActions()
     codeMenu->addAction(checkSyntaxAct);
     codeToolBar->addAction(checkSyntaxAct);
 
+    const QIcon convertToJsonIcon = QIcon(":/images/convert_to_json.png");
+    QAction *convertToJsonAct = new QAction(convertToJsonIcon, tr("Convert to &Json"), this);
+    convertToJsonAct->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_J));
+    convertToJsonAct->setStatusTip(tr("Convert XML File to JSON"));
+    connect(convertToJsonAct, &QAction::triggered, this, &MainWindow::convertToJson);
+    codeMenu->addAction(convertToJsonAct);
+    codeToolBar->addAction(convertToJsonAct);
+
     menuBar()->addSeparator();
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
@@ -324,8 +371,8 @@ void MainWindow::setupActions()
 #ifndef QT_NO_CLIPBOARD
     cutAct->setEnabled(false);
     copyAct->setEnabled(false);
-    connect(editor, &CodeEditor::copyAvailable, cutAct, &QAction::setEnabled);
-    connect(editor, &CodeEditor::copyAvailable, copyAct, &QAction::setEnabled);
+    connect(xmlEditor, &CodeEditor::copyAvailable, cutAct, &QAction::setEnabled);
+    connect(xmlEditor, &CodeEditor::copyAvailable, copyAct, &QAction::setEnabled);
 #endif // !QT_NO_CLIPBOARD
 }
 
@@ -336,7 +383,7 @@ void MainWindow::setupStatusBar()
 
 bool MainWindow::maybeSave()
 {
-    if (!editor->document()->isModified())
+    if (!xmlEditor->document()->isModified())
         return true;
     const QMessageBox::StandardButton ret
             = QMessageBox::warning(this, tr("XML Editor"),
@@ -371,7 +418,7 @@ void MainWindow::loadFile(const QString &fileName)
 #ifndef QT_NO_CURSOR
         QGuiApplication::setOverrideCursor(Qt::WaitCursor);
 #endif
-        editor->setPlainText(in.readAll());
+        xmlEditor->setPlainText(in.readAll());
 #ifndef QT_NO_CURSOR
         QGuiApplication::restoreOverrideCursor();
 #endif
@@ -389,7 +436,7 @@ void MainWindow::loadFile(const QString &fileName)
 #ifndef QT_NO_CURSOR
             QGuiApplication::setOverrideCursor(Qt::WaitCursor);
 #endif
-            editor->setPlainText(QString::fromStdString(sb.str()));
+            xmlEditor->setPlainText(QString::fromStdString(sb.str()));
 #ifndef QT_NO_CURSOR
             QGuiApplication::restoreOverrideCursor();
 #endif
@@ -415,8 +462,8 @@ bool MainWindow::saveFile(const QString &fileName)
         QSaveFile file(fileName);
         if (file.open(QFile::WriteOnly | QFile::Text)) {
             QTextStream out(&file);
-            editor->clearErrors();
-            out << editor->toPlainText();
+            xmlEditor->clearErrors();
+            out << xmlEditor->toPlainText();
             if (!file.commit()) {
                 errorMessage = tr("Cannot write file %1:\n%2.")
                         .arg(QDir::toNativeSeparators(fileName), file.errorString());
@@ -432,11 +479,11 @@ bool MainWindow::saveFile(const QString &fileName)
 
         std::filebuf fb;
         if (fb.open(fileName.toStdString(), std::ios_base::out | std::ios_base::binary)) {
-            editor->clearErrors();
+            xmlEditor->clearErrors();
 
             std::ostream os(&fb);
 
-            std::stringbuf sb(editor->toPlainText().toStdString(), std::ios_base::in);
+            std::stringbuf sb(xmlEditor->toPlainText().toStdString(), std::ios_base::in);
             std::istream is(&sb);
 
             huffman huff;
@@ -466,7 +513,7 @@ bool MainWindow::saveFile(const QString &fileName)
 void MainWindow::setCurrentFile(const QString &fileName)
 {
     curFile = fileName;
-    editor->document()->setModified(false);
+    xmlEditor->document()->setModified(false);
     setWindowModified(false);
 
     QString shownName = curFile;
@@ -483,7 +530,7 @@ void MainWindow::commitData(QSessionManager &manager)
             manager.cancel();
     } else {
         // Non-interactive: save without asking
-        if (editor->document()->isModified())
+        if (xmlEditor->document()->isModified())
             save();
     }
 }

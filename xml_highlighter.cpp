@@ -1,6 +1,6 @@
-#include "highlighter.h"
+#include "xml_highlighter.h"
 
-Highlighter::Highlighter(QTextDocument *parent)
+XmlHighlighter::XmlHighlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent)
 {
     HighlightingRule rule;
@@ -30,7 +30,7 @@ Highlighter::Highlighter(QTextDocument *parent)
     commentEndExpression = QRegularExpression(QStringLiteral("-->"));
 }
 
-void Highlighter::highlightBlock(const QString &text)
+void XmlHighlighter::highlightBlock(const QString &text)
 {
     for (const HighlightingRule &rule : qAsConst(highlightingRules)) {
         QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);

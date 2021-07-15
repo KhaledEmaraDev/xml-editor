@@ -13,7 +13,6 @@ requires(qtConfig(filedialog))
 SOURCES += \
     codeeditor.cpp \
     compress/huffman.cpp \
-    highlighter.cpp \
     lib/json.cpp \
 #    lib/jsonnode.cpp \
     lib/xmlnode.cpp \
@@ -22,13 +21,14 @@ SOURCES += \
     mainwidnow.cpp \
     test/compresstest.cpp \
     test/hashtest.cpp \
-    test/xmltest.cpp
+    test/xmltest.cpp \
+    xml_highlighter.cpp \
+    json_highlighter.cpp
 
 HEADERS += \
     codeeditor.h \
     compress/huffman.h \
     compress/hnode.h \
-    highlighter.h \
     lib/hashcode.h \
     lib/hashmap.h \
     lib/json.h \
@@ -36,7 +36,9 @@ HEADERS += \
     lib/mpair.h \
     lib/xmlnode.h \
     lib/xmltree.h \
-    mainwindow.h
+    mainwindow.h \
+    xml_highlighter.h \
+    json_highlighter.h
 
 RESOURCES = application.qrc
 

@@ -1,5 +1,5 @@
-#ifndef HIGHLIGHTER_H
-#define HIGHLIGHTER_H
+#ifndef JSON_HIGHLIGHTER_H
+#define JSON_HIGHLIGHTER_H
 
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
@@ -9,12 +9,12 @@ QT_BEGIN_NAMESPACE
 class QTextDocument;
 QT_END_NAMESPACE
 
-class Highlighter : public QSyntaxHighlighter
+class JsonHighlighter : public QSyntaxHighlighter
 {
     Q_OBJECT
 
 public:
-    Highlighter(QTextDocument *parent = 0);
+    JsonHighlighter(QTextDocument *parent = 0);
 
 protected:
     void highlightBlock(const QString &text) override;
@@ -27,13 +27,10 @@ private:
     };
     QVector<HighlightingRule> highlightingRules;
 
-    QRegularExpression commentStartExpression;
-    QRegularExpression commentEndExpression;
-
     QTextCharFormat tagFormat;
     QTextCharFormat commentFormat;
     QTextCharFormat valueFormat;
-    QTextCharFormat attributeFormat;
+    QTextCharFormat keyFormat;
 };
 
-#endif // HIGHLIGHTER_H
+#endif // JSON_HIGHLIGHTER_H

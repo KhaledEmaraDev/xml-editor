@@ -4,7 +4,8 @@
 #include <QMainWindow>
 
 #include "codeeditor.h"
-#include "highlighter.h"
+#include "xml_highlighter.h"
+#include "json_highlighter.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -34,6 +35,7 @@ private slots:
     bool checkSyntax();
     void minify();
     void prettify();
+    void convertToJson();
     void documentWasModified();
 #ifndef QT_NO_SESSIONMANAGER
     void commitData(QSessionManager &);
@@ -47,8 +49,11 @@ private:
     bool saveFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
 
-    CodeEditor *editor;
-    Highlighter *highlighter;
+    QTabWidget *tabber;
+    CodeEditor *xmlEditor;
+    XmlHighlighter *xmlHighlighter;
+    CodeEditor *jsonEditor;
+    JsonHighlighter *jsonHighlighter;
     QString curFile;
 };
 
