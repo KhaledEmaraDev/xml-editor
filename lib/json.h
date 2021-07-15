@@ -27,7 +27,11 @@ private:
      * @param depth
      * @param output
      */
-    static void xml2json_helper(const XMLNode* node, int spaces, int depth, QTextStream &output);
+    static void xml2json_helper(const XMLNode* node,
+                                int spaces,
+                                int depth,
+                                bool array_parent,
+                                QTextStream &output);
 };
 
 #endif // JSON_H
